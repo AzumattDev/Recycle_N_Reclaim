@@ -9,22 +9,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
     {
         public static void RecycleInventoryForAllRecipes(Inventory inventory, Player player)
         {
-            var itemListSnapshot = new List<ItemDrop.ItemData>();
-            // copy the inventory, otherwise collection will constantly change causing issues
-            itemListSnapshot.AddRange(inventory.GetAllItems());
-            var analysisList = new List<RecyclingAnalysisContext>();
-            for (var index = 0; index < itemListSnapshot.Count; index++)
-            {
-                var item = itemListSnapshot[index];
-                var analysisContext = new RecyclingAnalysisContext(item);
-                analysisList.Add(analysisContext);
-                RecycleOneItemInInventory(analysisContext, inventory, player);
-                if (analysisContext.ShouldErrorDumpAnalysis || Recycle_N_ReclaimPlugin.DebugAlwaysDumpAnalysisContext.Value == Recycle_N_ReclaimPlugin.Toggle.On)
-                {
-                    analysisContext.Dump();
-                }
-            }
-
+            var analysisList = GetRecyclingAnalysisForInventory(inventory, player);
             var stringBuilder = new StringBuilder();
             foreach (var analysisContext in analysisList.Where(analysis => analysis.RecyclingImpediments.Count > 0))
             {
@@ -40,7 +25,6 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
         public static List<RecyclingAnalysisContext> GetRecyclingAnalysisForInventory(Inventory inventory, Player player)
         {
             var itemListSnapshot = new List<ItemDrop.ItemData>();
-            // copy the inventory, otherwise collection will constantly change causing issues
             itemListSnapshot.AddRange(inventory.GetAllItems());
             var analysisList = new List<RecyclingAnalysisContext>();
             for (var index = 0; index < itemListSnapshot.Count; index++)
@@ -48,20 +32,11 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 var item = itemListSnapshot[index];
                 var analysisContext = new RecyclingAnalysisContext(item);
                 analysisList.Add(analysisContext);
-                TryAnalyzeOneItem(analysisContext, inventory, player);
+                if (TryAnalyzeOneItem(analysisContext, inventory, player))
+                    DoInventoryChanges(analysisContext, inventory, player);
             }
 
             return analysisList;
-        }
-
-        private static void RecycleOneItemInInventory(RecyclingAnalysisContext analysisContext, Inventory inventory,
-            Player player)
-        {
-            if (!TryAnalyzeOneItem(analysisContext, inventory, player)) return;
-
-            if (analysisContext.RecyclingImpediments.Count > 0)
-                return;
-            DoInventoryChanges(analysisContext, inventory, player);
         }
 
         public static bool TryAnalyzeOneItem(RecyclingAnalysisContext analysisContext, Inventory inventory, Player player)
@@ -106,7 +81,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
 
             if (analysisContext.Recipe.m_craftingStation?.m_name != null
                 && Recycle_N_ReclaimPlugin.StationFilterEnabled.Value == Recycle_N_ReclaimPlugin.Toggle.On
-                && Recycle_N_ReclaimPlugin.StationFilterList.Contains(analysisContext.Recipe.m_craftingStation.m_name))
+                && Recycle_N_ReclaimPlugin.StationFilterList.Contains(Utils.GetPrefabName(analysisContext.Recipe.m_craftingStation.transform.root.gameObject)))
                 analysisContext.DisplayImpediments.Add(
                     $"Item is from filtered station ({Recycle_N_ReclaimPlugin.Localize(analysisContext.Recipe.m_craftingStation.m_name)})");
         }
@@ -181,6 +156,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                  */
 
 
+
                 // handle multi recipe thing
                 var knownRecipes = foundRecipes.Where(r => player.IsRecipeKnown(r.m_item.m_itemData.m_shared.m_name)).ToList();
                 if (knownRecipes.Any())
@@ -192,6 +168,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 // still select the one with the smallest amount if multiple options exist
                 foundRecipes = foundRecipes.OrderBy(r => r.m_amount).Take(1).ToList();
             }
+
 
             analysisContext.Recipe = foundRecipes.FirstOrDefault();
             if (!player.IsRecipeKnown(analysisContext.Recipe.m_item.m_itemData.m_shared.m_name) &&

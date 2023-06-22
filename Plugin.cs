@@ -31,6 +31,7 @@ namespace Recycle_N_Reclaim
         private ContainerRecyclingButtonHolder _containerRecyclingButton;
 
         private readonly Harmony _harmony = new(ModGUID);
+        internal static bool AdminStatus;
 
         public static readonly ManualLogSource Recycle_N_ReclaimLogger = BepInEx.Logging.Logger.CreateLogSource(ModName);
 
@@ -48,7 +49,7 @@ namespace Recycle_N_Reclaim
             // Uncomment the line below to use the LocalizationManager for localizing your mod.
             // Make sure to populate the English.yml file in the translation folder with your keys to be localized and the values associated before uncommenting!.
             //Localizer.Load(); // Use this to initialize the LocalizationManager (for more information on LocalizationManager, see the LocalizationManager documentation https://github.com/blaxxun-boop/LocalizationManager#example-project).
-
+            
             _serverConfigLocked = config("1 - General", "Lock Configuration", Toggle.On, "If on, the configuration is locked and can be changed by server admins only.");
             _ = ConfigSyncVar.AddLockingConfigEntry(_serverConfigLocked);
 
@@ -60,6 +61,8 @@ namespace Recycle_N_Reclaim
             hotKey = config("2 - Inventory Discard", "DiscardHotkey(s)", new KeyboardShortcut(KeyCode.Delete), new ConfigDescription("The hotkey to discard an item or regain resources. Must be enabled", new AcceptableShortcuts()), false);
             returnUnknownResources = config("2 - Inventory Discard", "ReturnUnknownResources", Toggle.Off, "If on, discarding an item in the inventory will return resources if recipe is unknown");
             returnEnchantedResources = config("2 - Inventory Discard", "ReturnEnchantedResources", Toggle.Off, "If on and Epic Loot is installed, discarding an item in the inventory will return resources for Epic Loot enchantments");
+            returnResources = config("2 - Inventory Discard", "ReturnResources", 1f, "Fraction of resources to return (0.0 - 1.0)");
+
 
 
             /* Simple Recycling */
@@ -97,8 +100,7 @@ namespace Recycle_N_Reclaim
                 "The last saved recycling button position stored in JSON");
 
             // UI
-            ContainerRecyclingEnabled = config("4 - UI", "ContainerRecyclingEnabled",
-                Toggle.Off, "If enabled, the mod will display the container recycling button");
+            ContainerRecyclingEnabled = config("4 - UI", "ContainerRecyclingEnabled", Toggle.Off, "If enabled, the mod will display the container recycling button");
 
             NotifyOnSalvagingImpediments = config("4 - UI", "NotifyOnSalvagingImpediments", Toggle.On,
                 "If enabled and recycling a specific item runs into any issues, the mod will print a message\n" +

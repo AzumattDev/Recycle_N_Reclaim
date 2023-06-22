@@ -53,6 +53,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder.SetActive(true);
         }
 
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.UpdateRecipe), typeof(Player), typeof(float))]
         static bool UpdateRecipeOnRecyclingTab(InventoryGui __instance, Player player, float dt)

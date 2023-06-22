@@ -45,6 +45,8 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
         public void Dump()
         {
             if (!ShouldErrorDumpAnalysis) return; // Early return if analysis dumping is not required
+
+          
             var dumpObject = new
             {
                 ItemName = Item.m_shared.m_name,
@@ -67,6 +69,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             sb.AppendLine("==== Dump ends here ====");
             Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError(sb.ToString());
         }
+
 
         private dynamic GetRecipeObject()
         {
