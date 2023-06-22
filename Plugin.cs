@@ -231,7 +231,7 @@ namespace Recycle_N_Reclaim
 
         private ConfigEntry<string> _stationFilterListString;
 
-        public static List<string> StationFilterList = new List<string>();
+        public static List<string> StationFilterList = new();
 
         private ConfigEntry<string> StationFilterListString
         {

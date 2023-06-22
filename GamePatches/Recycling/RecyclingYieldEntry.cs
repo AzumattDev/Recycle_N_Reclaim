@@ -10,10 +10,10 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
         public ItemDrop.ItemData Item;
 
         public Recipe Recipe { get; set; }
-        public List<string> RecyclingImpediments { get; } = new List<string>();
+        public List<string> RecyclingImpediments { get; } = new();
 
-        public List<string> DisplayImpediments { get; } = new List<string>();
-        public List<RecyclingYieldEntry> Entries { get; } = new List<RecyclingYieldEntry>();
+        public List<string> DisplayImpediments { get; } = new();
+        public List<RecyclingYieldEntry> Entries { get; } = new();
 
         public bool ShouldErrorDumpAnalysis { get; set; }
 
@@ -44,6 +44,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
 
         public void Dump()
         {
+            if (!ShouldErrorDumpAnalysis) return; // Early return if analysis dumping is not required
             var dumpObject = new
             {
                 ItemName = Item.m_shared.m_name,
