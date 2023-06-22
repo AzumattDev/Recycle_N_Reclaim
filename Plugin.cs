@@ -58,7 +58,6 @@ namespace Recycle_N_Reclaim
             discardInvEnabled = config("2 - Inventory Discard", "Enabled", Toggle.On, new ConfigDescription("If on, you'll be able to discard things inside of the player inventory.", null, new ConfigurationManagerAttributes { Order = 2 }));
             lockToAdmin = config("2 - Inventory Discard", "Lock to Admin", Toggle.On, new ConfigDescription("If on, only admin's can use this feature.", null, new ConfigurationManagerAttributes { Order = 1 }));
             hotKey = config("2 - Inventory Discard", "DiscardHotkey(s)", new KeyboardShortcut(KeyCode.Delete), new ConfigDescription("The hotkey to discard an item or regain resources. Must be enabled", new AcceptableShortcuts()), false);
-            returnUnknownResources = config("2 - Inventory Discard", "ReturnUnknownResources", Toggle.Off, "Return resources if recipe is unknown");
             returnUnknownResources = config("2 - Inventory Discard", "ReturnUnknownResources", Toggle.Off, "If on, discarding an item in the inventory will return resources if recipe is unknown");
             returnEnchantedResources = config("2 - Inventory Discard", "ReturnEnchantedResources", Toggle.Off, "If on and Epic Loot is installed, discarding an item in the inventory will return resources for Epic Loot enchantments");
 
