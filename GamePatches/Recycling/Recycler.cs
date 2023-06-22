@@ -167,9 +167,28 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 return false;
             }
 
-            if (foundRecipes.Count > 1)
+            /*if (foundRecipes.Count > 1)
             {
                 //todo: handle multi recipe thing, rework later
+                foundRecipes = foundRecipes.OrderBy(r => r.m_amount).Take(1).ToList();
+            }*/
+            if (foundRecipes.Count > 1) // Attempt to complete the task above.
+            {
+                /* How this one works:
+                 * 1. Get all recipes that the player knows.
+                 * 2. If the player knows any of the recipes, prioritize those.
+                 * 3. If the player doesn't know any of the recipes, prioritize the one with the smallest amount.
+                 */
+
+
+                // handle multi recipe thing
+                var knownRecipes = foundRecipes.Where(r => player.IsRecipeKnown(r.m_item.m_itemData.m_shared.m_name)).ToList();
+                if (knownRecipes.Any())
+                {
+                    // prioritize known recipes
+                    foundRecipes = knownRecipes;
+                }
+                // still select the one with the smallest amount if multiple options exist
                 foundRecipes = foundRecipes.OrderBy(r => r.m_amount).Take(1).ToList();
             }
 
@@ -210,10 +229,8 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                     item.GetComponent<ItemDrop>().m_itemData.m_shared.m_name == rItemData.m_shared.m_name);
                 if (preFab == null)
                 {
-                    Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogWarning(
-                        $"Could not find a prefab for {itemData.m_shared.m_name}! Won't be able to spawn items. You might want to report this!");
-                    analysisContext.RecyclingImpediments.Add(
-                        $"Could not find item {Localization.instance.Localize(itemData.m_shared.m_name)}({itemData.m_shared.m_name})");
+                    Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogWarning($"Could not find a prefab for {itemData.m_shared.m_name}! Won't be able to spawn items. You might want to report this!");
+                    analysisContext.RecyclingImpediments.Add($"Could not find item {Localization.instance.Localize(itemData.m_shared.m_name)}({itemData.m_shared.m_name})");
                     continue;
                 }
 
@@ -224,8 +241,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                         rItemData.m_variant, initialRecipeHadZero));
                 if (Recycle_N_ReclaimPlugin.PreventZeroResourceYields.Value == Recycle_N_ReclaimPlugin.Toggle.On && finalAmount == 0 && !initialRecipeHadZero)
                 {
-                    analysisContext.RecyclingImpediments.Add(
-                        $"Recycling would yield 0 of {Localization.instance.Localize(resource.m_resItem.m_itemData.m_shared.m_name)}");
+                    analysisContext.RecyclingImpediments.Add($"Recycling would yield 0 of {Localization.instance.Localize(resource.m_resItem.m_itemData.m_shared.m_name)}");
                 }
             }
         }
