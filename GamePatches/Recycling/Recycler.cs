@@ -33,7 +33,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 foreach (var impediment in analysisContext.RecyclingImpediments) stringBuilder.AppendLine(impediment);
             }
 
-            if (stringBuilder.ToString().Length == 0 || Recycle_N_ReclaimPlugin.NotifyOnSalvagingImpediments.Value == Recycle_N_ReclaimPlugin.Toggle.Off) return;
+            if (stringBuilder.Length == 0 || Recycle_N_ReclaimPlugin.NotifyOnSalvagingImpediments.Value == Recycle_N_ReclaimPlugin.Toggle.Off) return;
             MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, stringBuilder.ToString());
         }
 
@@ -188,6 +188,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                     // prioritize known recipes
                     foundRecipes = knownRecipes;
                 }
+
                 // still select the one with the smallest amount if multiple options exist
                 foundRecipes = foundRecipes.OrderBy(r => r.m_amount).Take(1).ToList();
             }
