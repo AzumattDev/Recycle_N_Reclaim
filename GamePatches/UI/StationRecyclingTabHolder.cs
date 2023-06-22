@@ -177,8 +177,25 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         public void UpdateRecipe(Player player, float dt)
         {
             var igui = InventoryGui.instance;
-
             var selectedRecipeIndex = igui.GetSelectedRecipeIndex(false);
+
+            UpdateRecyclingAnalysisContexts(selectedRecipeIndex, player);
+            UpdateCraftingStationUI(player);
+
+            if (igui.get_m_selectedRecipe().Key)
+            {
+                UpdateRecipeUI(selectedRecipeIndex, igui);
+            }
+            else
+            {
+                ClearRecipeUI(igui);
+            }
+
+            UpdateCraftingTimer(dt, selectedRecipeIndex, player, igui);
+        }
+
+        private void UpdateRecyclingAnalysisContexts(int selectedRecipeIndex, Player player)
+        {
             if (selectedRecipeIndex > -1 && _recyclingAnalysisContexts.Count > 0 && selectedRecipeIndex < _recyclingAnalysisContexts.Count)
             {
                 var context = _recyclingAnalysisContexts[selectedRecipeIndex];
@@ -186,103 +203,118 @@ namespace Recycle_N_Reclaim.GamePatches.UI
                 Recycler.TryAnalyzeOneItem(newContext, player.GetInventory(), player);
                 _recyclingAnalysisContexts[selectedRecipeIndex] = newContext;
             }
+        }
 
+        private void UpdateCraftingStationUI(Player player)
+        {
+            var igui = InventoryGui.instance;
             var currentCraftingStation = player.GetCurrentCraftingStation();
-            if ((bool)currentCraftingStation)
+
+            if (currentCraftingStation)
             {
+                SetActive(igui.m_craftingStationIcon.gameObject, true);
+                SetActive(igui.m_craftingStationLevelRoot.gameObject, true);
                 igui.m_craftingStationName.text = Localization.instance.Localize(currentCraftingStation.m_name);
-                igui.m_craftingStationIcon.gameObject.SetActive(true);
                 igui.m_craftingStationIcon.sprite = currentCraftingStation.m_icon;
                 igui.m_craftingStationLevel.text = currentCraftingStation.GetLevel().ToString();
-                igui.m_craftingStationLevelRoot.gameObject.SetActive(true);
             }
             else
             {
+                SetActive(igui.m_craftingStationIcon.gameObject, false);
+                SetActive(igui.m_craftingStationLevelRoot.gameObject, false);
                 igui.m_craftingStationName.text = Localization.instance.Localize("$hud_crafting");
-                igui.m_craftingStationIcon.gameObject.SetActive(false);
-                igui.m_craftingStationLevelRoot.gameObject.SetActive(false);
             }
+        }
 
-            if (igui.get_m_selectedRecipe().Key)
+        private void UpdateRecipeUI(int selectedRecipeIndex, InventoryGui igui)
+        {
+            var analysisContext = _recyclingAnalysisContexts[selectedRecipeIndex];
+            var itemData = igui.get_m_selectedRecipe().Value;
+            var num = itemData?.m_quality + 1 ?? 1;
+
+            igui.m_recipeIcon.enabled = true;
+            igui.m_recipeName.enabled = true;
+            igui.m_recipeDecription.enabled = true;
+
+            igui.m_recipeIcon.sprite = igui.get_m_selectedRecipe().Key.m_item.m_itemData.m_shared.m_icons[itemData?.m_variant ?? igui.get_m_selectedVariant()];
+            string str = Localization.instance.Localize(igui.get_m_selectedRecipe().Key.m_item.m_itemData.m_shared.m_name);
+            if (analysisContext.Item.m_stack > 1)
+                str = str + " x" + analysisContext.Item.m_stack;
+            igui.m_recipeName.text = str;
+
+            if (analysisContext.RecyclingImpediments.Count == 0)
+                igui.m_recipeDecription.text = "\nAll requirements are <color=orange>fulfilled</color>";
+            else
+                igui.m_recipeDecription.text = "\nRecycling blocked for these reasons:\n\n<size=10>" + $"{string.Join("\n", analysisContext.RecyclingImpediments)}" + $"</size>";
+
+            if (itemData != null)
             {
-                var analysisContext = _recyclingAnalysisContexts[igui.GetSelectedRecipeIndex(false)];
-                igui.m_recipeIcon.enabled = true;
-                igui.m_recipeName.enabled = true;
-                igui.m_recipeDecription.enabled = true;
-                var itemData = igui.get_m_selectedRecipe().Value;
-                var num = itemData?.m_quality + 1 ?? 1;
-                igui.m_recipeIcon.sprite = igui.get_m_selectedRecipe().Key.m_item.m_itemData.m_shared
-                    .m_icons[itemData?.m_variant ?? igui.get_m_selectedVariant()];
-                string str =
-                    Localization.instance.Localize(igui.get_m_selectedRecipe().Key.m_item.m_itemData.m_shared.m_name);
-                if (analysisContext.Item.m_stack > 1)
-                    str = str + " x" + analysisContext.Item.m_stack;
-                igui.m_recipeName.text = str;
-                igui.m_recipeDecription.text = Localization.instance.Localize(
-                    ItemDrop.ItemData.GetTooltip(igui.get_m_selectedRecipe().Key.m_item.m_itemData, num, true, igui.get_m_selectedRecipe().Key.m_item.m_itemData.m_worldLevel));
-                if (analysisContext.RecyclingImpediments.Count == 0)
-                    igui.m_recipeDecription.text = "\nAll requirements are <color=orange>fulfilled</color>";
-                else
-                    igui.m_recipeDecription.text = $"\nRecycling blocked for these reasons:\n\n<size=10>" +
-                                                   $"{string.Join("\n", analysisContext.RecyclingImpediments)}" +
-                                                   $"</size>";
-                if (itemData != null)
-                {
-                    igui.m_itemCraftType.gameObject.SetActive(true);
-                    igui.m_itemCraftType.text =
-                        Localization.instance.Localize(
-                            $"Recycle {itemData.m_shared.m_name} of quality {itemData.m_quality}");
-                }
-                else
-                    igui.m_itemCraftType.gameObject.SetActive(false);
-
-                igui.m_variantButton.gameObject.SetActive(
-                    igui.get_m_selectedRecipe().Key.m_item.m_itemData.m_shared.m_variants > 1 &&
-                    igui.get_m_selectedRecipe().Value == null);
-                SetupRequirementList(analysisContext);
-                igui.m_minStationLevelIcon.gameObject.SetActive(false);
-                igui.m_craftButton.interactable = analysisContext.RecyclingImpediments.Count == 0;
-                igui.m_craftButton.GetComponentInChildren<Text>().text = "Reclaim";
-                igui.m_craftButton.GetComponent<UITooltip>().m_text = analysisContext.RecyclingImpediments.Count == 0
-                    ? ""
-                    : Localization.instance.Localize("$msg_missingrequirement");
+                SetActive(igui.m_itemCraftType.gameObject, true);
+                igui.m_itemCraftType.text = Localization.instance.Localize($"Recycle {itemData.m_shared.m_name} of quality {itemData.m_quality}");
             }
             else
-            {
-                igui.m_recipeIcon.enabled = false;
-                igui.m_recipeName.enabled = false;
-                igui.m_recipeDecription.enabled = false;
-                igui.m_qualityPanel.gameObject.SetActive(false);
-                igui.m_minStationLevelIcon.gameObject.SetActive(false);
-                igui.m_craftButton.GetComponent<UITooltip>().m_text = "";
-                igui.m_variantButton.gameObject.SetActive(false);
-                igui.m_craftButton.GetComponentInChildren<Text>().text = "Reclaim";
-                igui.m_itemCraftType.gameObject.SetActive(false);
-                for (int index = 0; index < igui.m_recipeRequirementList.Length; ++index)
-                    InventoryGui.HideRequirement(igui.m_recipeRequirementList[index].transform);
-                igui.m_craftButton.interactable = false;
-            }
+                SetActive(igui.m_itemCraftType.gameObject, false);
 
+            SetActive(igui.m_variantButton.gameObject, igui.get_m_selectedRecipe().Key.m_item.m_itemData.m_shared.m_variants > 1 && igui.get_m_selectedRecipe().Value == null);
+
+            SetupRequirementList(analysisContext);
+
+            SetActive(igui.m_minStationLevelIcon.gameObject, false);
+            igui.m_craftButton.interactable = analysisContext.RecyclingImpediments.Count == 0;
+            igui.m_craftButton.GetComponentInChildren<Text>().text = "Reclaim";
+            igui.m_craftButton.GetComponent<UITooltip>().m_text = analysisContext.RecyclingImpediments.Count == 0 ? "" : Localization.instance.Localize("$msg_missingrequirement");
+        }
+
+        private void ClearRecipeUI(InventoryGui igui)
+        {
+            igui.m_recipeIcon.enabled = false;
+            igui.m_recipeName.enabled = false;
+            igui.m_recipeDecription.enabled = false;
+
+            SetActive(igui.m_qualityPanel.gameObject, false);
+            SetActive(igui.m_minStationLevelIcon.gameObject, false);
+            igui.m_craftButton.GetComponent<UITooltip>().m_text = "";
+            SetActive(igui.m_variantButton.gameObject, false);
+
+            igui.m_craftButton.GetComponentInChildren<Text>().text = "Reclaim";
+            SetActive(igui.m_itemCraftType.gameObject, false);
+            for (int index = 0; index < igui.m_recipeRequirementList.Length; ++index)
+                InventoryGui.HideRequirement(igui.m_recipeRequirementList[index].transform);
+            igui.m_craftButton.interactable = false;
+        }
+
+        private void UpdateCraftingTimer(float dt, int selectedRecipeIndex, Player player, InventoryGui igui)
+        {
             if (igui.get_m_craftTimer() < 0.0)
             {
-                igui.m_craftProgressPanel.gameObject.SetActive(false);
-                igui.m_craftButton.gameObject.SetActive(true);
+                SetActive(igui.m_craftProgressPanel.gameObject, false);
+                SetActive(igui.m_craftButton.gameObject, true);
             }
             else
             {
-                igui.m_craftButton.gameObject.SetActive(false);
-                igui.m_craftProgressPanel.gameObject.SetActive(true);
+                SetActive(igui.m_craftButton.gameObject, false);
+                SetActive(igui.m_craftProgressPanel.gameObject, true);
                 igui.m_craftProgressBar.SetMaxValue(igui.m_craftDuration);
                 igui.m_craftProgressBar.SetValue(igui.get_m_craftTimer());
                 igui.set_m_craftTimer(igui.get_m_craftTimer() + dt);
-                if (igui.get_m_craftTimer() < (double)igui.m_craftDuration)
-                    return;
-                Recycler.DoInventoryChanges(_recyclingAnalysisContexts[selectedRecipeIndex], player.GetInventory(), player);
-                igui.set_m_craftTimer(-1f);
-                igui.SetRecipe(-1, false);
-                UpdateCraftingPanel();
+                if (igui.get_m_craftTimer() >= (double)igui.m_craftDuration)
+                {
+                    Recycler.DoInventoryChanges(_recyclingAnalysisContexts[selectedRecipeIndex], player.GetInventory(), player);
+                    igui.set_m_craftTimer(-1f);
+                    igui.SetRecipe(-1, false);
+                    UpdateCraftingPanel();
+                }
             }
         }
+
+        private void SetActive(GameObject gameObject, bool isActive)
+        {
+            if (gameObject)
+            {
+                gameObject.SetActive(isActive);
+            }
+        }
+
 
         private void SetupRequirementList(RecyclingAnalysisContext analysisContexts)
         {
