@@ -23,7 +23,12 @@ recycling items back into resources.
 
 All code changes after the initial release of this mod were written by me. This includes the merging of the two mods and any improvements made to the code.
 
-![2023-06-22_11-33-22](https://github.com/AzumattDev/SkillManagerModTemplate/assets/80414405/2dbbe853-eccc-460c-bf41-111f38d0a6ac)
+<p align="center">
+  <img alt="2023-06-22_11-33-22" src="https://github.com/AzumattDev/SkillManagerModTemplate/assets/80414405/2dbbe853-eccc-460c-bf41-111f38d0a6ac"/>
+</p>
+<img src="https://github.com/AzumattDev/Recycle_N_Reclaim/assets/80414405/cd4e10be-1728-435a-ae3f-47b7daa2f3cd" alt="E1CB4F06-72CE-43BC-9FFC-1E53E89640EE-min" width="100%" style="max-width: 1280px; height: auto;">
+
+<img src="https://github.com/AzumattDev/Recycle_N_Reclaim/assets/80414405/102410f4-4b8a-4cd4-919e-421ddb33db38" alt="5B0B26B8-8064-421E-8888-6D40E71C56DC-min" width="100%" style="max-width: 1280px; height: auto;">
 
 <details>
 <summary><b>Installation Instructions</b></summary>
