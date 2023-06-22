@@ -57,10 +57,10 @@ namespace Recycle_N_Reclaim
             /* Discard Items in Inventory */
             discardInvEnabled = config("2 - Inventory Discard", "Enabled", Toggle.On, new ConfigDescription("If on, you'll be able to discard things inside of the player inventory.", null, new ConfigurationManagerAttributes { Order = 2 }));
             lockToAdmin = config("2 - Inventory Discard", "Lock to Admin", Toggle.On, new ConfigDescription("If on, only admin's can use this feature.", null, new ConfigurationManagerAttributes { Order = 1 }));
-            hotKey = config("2 - Inventory Discard", "DiscardHotkey", new KeyboardShortcut(KeyCode.Delete), new ConfigDescription("The hotkey to discard an item", new AcceptableShortcuts()), false);
+            hotKey = config("2 - Inventory Discard", "DiscardHotkey(s)", new KeyboardShortcut(KeyCode.Delete), new ConfigDescription("The hotkey to discard an item or regain resources. Must be enabled", new AcceptableShortcuts()), false);
             returnUnknownResources = config("2 - Inventory Discard", "ReturnUnknownResources", Toggle.Off, "Return resources if recipe is unknown");
-            returnEnchantedResources = config("2 - Inventory Discard", "ReturnEnchantedResources", Toggle.Off, "Return resources for Epic Loot enchantments");
-            returnResources = config("2 - Inventory Discard", "ReturnResources", 1f, "Fraction of resources to return (0.0 - 1.0)");
+            returnUnknownResources = config("2 - Inventory Discard", "ReturnUnknownResources", Toggle.Off, "If on, discarding an item in the inventory will return resources if recipe is unknown");
+            returnEnchantedResources = config("2 - Inventory Discard", "ReturnEnchantedResources", Toggle.Off, "If on and Epic Loot is installed, discarding an item in the inventory will return resources for Epic Loot enchantments");
 
 
             /* Simple Recycling */
@@ -129,18 +129,19 @@ namespace Recycle_N_Reclaim
                 "Enabled by default");
 
             StationFilterListString = config("4 - UI", "StationFilterList", "piece_cauldron",
-                "Comma separated list of crafting stations (by their \"piece name\")\n" +
+                "Comma separated list of crafting stations (by their \"prefab name\")\n" +
                 "recipes from which should be ignored in regards to recycling.\n" +
                 "Main purpose of this is to prevent showing food as a recyclable item,\n" +
                 "but can be extended further if needed.\n" +
                 "\n" +
                 "Full list of stations used in recipes as of 0.147.3:\n" +
-                "- identifier: `$piece_forge` in game name: Forge\n" +
-                "- identifier: `$piece_workbench` in game name: Workbench\n" +
-                "- identifier: `$piece_cauldron` in game name: Cauldron\n" +
-                "- identifier: `$piece_stonecutter` in game name: Stonecutter\n" +
-                "\n" +
-                "Use the identifiers, not the in game names (duh!)");
+                "- identifier: `forge` in game name: Forge\n" +
+                "- identifier: `blackforge` in game name: Black Forge\n" +
+                "- identifier: `piece_workbench` in game name: Workbench\n" +
+                "- identifier: `piece_cauldron` in game name: Cauldron\n" +
+                "- identifier: `piece_stonecutter` in game name: Stonecutter\n" +
+                "- identifier: `piece_artisanstation` in game name: Artisan table\n" +
+                "- identifier: `piece_magetable` in game name: Galdr table\n");
 
             // debug
             DebugAlwaysDumpAnalysisContext = config("zDebug", "DebugAlwaysDumpAnalysisContext", Toggle.Off,
