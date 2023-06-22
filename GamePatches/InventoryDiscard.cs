@@ -1,13 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using BepInEx;
-using BepInEx.Bootstrap;
-using BepInEx.Configuration;
-using BepInEx.Logging;
 using HarmonyLib;
-using ServerSync;
 using UnityEngine;
 
 namespace Recycle_N_Reclaim.GamePatches;
@@ -132,7 +126,7 @@ public static class UpdateItemDrag_Patch
             ___m_dragInventory.RemoveItem(___m_dragItem, ___m_dragAmount);
         }
 
-        GameObject.Destroy(___m_dragGo);
+        Object.Destroy(___m_dragGo);
         ___m_dragGo = null;
         __instance.UpdateCraftingPanel(false);
     }

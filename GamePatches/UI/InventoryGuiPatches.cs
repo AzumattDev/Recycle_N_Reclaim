@@ -39,7 +39,9 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.UpdateCraftingPanel))]
         static void UpdateCraftingPanelDetourOnOtherTabsEnableRecyclingButton(InventoryGui __instance)
         {
-            if (Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder.InRecycleTab()) return;
+            bool inRecycleTab = Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder.InRecycleTab();
+
+            if (inRecycleTab) return;
             var player = Player.m_localPlayer;
             Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder.SetInteractable(true);
             if (!player.GetCurrentCraftingStation() && !player.NoCostCheat())
@@ -50,6 +52,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
             Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder.SetActive(true);
         }
+
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.UpdateRecipe), typeof(Player), typeof(float))]

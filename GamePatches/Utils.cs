@@ -23,12 +23,7 @@ namespace Recycle_N_Reclaim.GamePatches
             _hashListOfFoundElements = new List<int>();
         }
 
-        public static string Dump(object element)
-        {
-            return Dump(element, 2);
-        }
-
-        public static string Dump(object element, int indentSize)
+        public static string Dump(object element, int indentSize = 2)
         {
             var instance = new ObjectDumper(indentSize);
             return instance.DumpElement(element);
@@ -36,9 +31,7 @@ namespace Recycle_N_Reclaim.GamePatches
 
         private string GetTypeName(Type type)
         {
-            if (IsAnonymousType(type)) return "AnonymousType";
-
-            return type.Name;
+            return IsAnonymousType(type) ? "AnonymousType" : type.Name;
         }
 
         private string DumpElement(object element)
@@ -61,7 +54,7 @@ namespace Recycle_N_Reclaim.GamePatches
                 if (enumerableElement != null)
                 {
                     foreach (var item in enumerableElement)
-                        if (item is IEnumerable && !(item is string))
+                        if (item is IEnumerable and not string)
                         {
                             _level++;
                             DumpElement(item);

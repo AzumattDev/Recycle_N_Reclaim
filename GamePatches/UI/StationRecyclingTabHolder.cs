@@ -10,7 +10,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
     {
         private GameObject _recyclingTabButtonGameObject;
         private Button _recyclingTabButtonComponent;
-        private List<RecyclingAnalysisContext> _recyclingAnalysisContexts = new List<RecyclingAnalysisContext>();
+        private List<RecyclingAnalysisContext> _recyclingAnalysisContexts = new();
 
         private void Start()
         {
@@ -46,10 +46,8 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             _recyclingTabButtonComponent.interactable = true;
             _recyclingTabButtonComponent.onClick.RemoveAllListeners();
             _recyclingTabButtonComponent.onClick.AddListener(OnRecycleClick);
-            if (Player.m_localPlayer?.GetCurrentCraftingStation() == null)
-                _recyclingTabButtonGameObject.SetActive(false);
-
-            _recyclingTabButtonGameObject.SetActive(Player.m_localPlayer?.GetCurrentCraftingStation() != null);
+            bool shouldBeActive = Player.m_localPlayer?.GetCurrentCraftingStation() != null;
+            _recyclingTabButtonGameObject.SetActive(shouldBeActive);
         }
 
         private void OnRecycleClick()
@@ -65,7 +63,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         {
             var igui = InventoryGui.instance;
             var localPlayer = Player.m_localPlayer;
-            if (!(bool)localPlayer.GetCurrentCraftingStation() && !localPlayer.NoCostCheat())
+            if (localPlayer.GetCurrentCraftingStation() == null && localPlayer.NoCostCheat() == false)
             {
                 igui.m_tabCraft.interactable = false;
                 igui.m_tabUpgrade.interactable = true;
@@ -81,10 +79,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
             if (igui.get_m_availableRecipes().Count > 0)
             {
-                if (igui.get_m_selectedRecipe().Key != null)
-                    igui.SetRecipe(igui.GetSelectedRecipeIndex(false), true);
-                else
-                    igui.SetRecipe(0, true);
+                igui.SetRecipe(igui.get_m_selectedRecipe().Key != null ? igui.GetSelectedRecipeIndex(false) : 0, true);
             }
             else
                 igui.SetRecipe(-1, true);
@@ -248,8 +243,8 @@ namespace Recycle_N_Reclaim.GamePatches.UI
                 igui.m_minStationLevelIcon.gameObject.SetActive(false);
                 igui.m_craftButton.interactable = analysisContext.RecyclingImpediments.Count == 0;
                 igui.m_craftButton.GetComponentInChildren<Text>().text = "Reclaim";
-                igui.m_craftButton.GetComponent<UITooltip>().m_text = analysisContext.RecyclingImpediments.Count == 0 
-                    ? "" 
+                igui.m_craftButton.GetComponent<UITooltip>().m_text = analysisContext.RecyclingImpediments.Count == 0
+                    ? ""
                     : Localization.instance.Localize("$msg_missingrequirement");
             }
             else
@@ -293,16 +288,14 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         {
             var igui = InventoryGui.instance;
 
-            for (int i = 0; i < igui.m_recipeRequirementList.Length; i++)
+            var filteredEntries = analysisContexts.Entries.Where(entry => entry.Amount != 0).ToList(); // Filter before the loop to avoid unnecessary iterations
+
+            for (int i = 0; i < igui.m_recipeRequirementList.Length; ++i)
             {
                 var elementTransform = igui.m_recipeRequirementList[i].transform;
-                if (i < analysisContexts.Entries.Count)
+                if (i < filteredEntries.Count)
                 {
-                    var entry = analysisContexts.Entries[i];
-                    if (entry.Amount == 0)
-                        InventoryGui.HideRequirement(elementTransform);
-                    else
-                        SetupRequirement(elementTransform, entry);
+                    SetupRequirement(elementTransform, filteredEntries[i]);
                 }
                 else
                 {
