@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
+using ServerSync;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -19,7 +20,8 @@ public static class UpdateItemDragPatch
     static MethodInfo getEnchantCostsMethod = enchantTabControllerType?.GetMethod("GetEnchantCosts", BindingFlags.Public | BindingFlags.Static);
 
     private static void Postfix(InventoryGui __instance, ItemDrop.ItemData ___m_dragItem, Inventory ___m_dragInventory, int ___m_dragAmount, ref GameObject ___m_dragGo)
-    {
+    { 
+        if (Recycle_N_ReclaimPlugin.lockToAdmin.Value == Recycle_N_ReclaimPlugin.Toggle.On && !Recycle_N_ReclaimPlugin.ConfigSyncVar.IsAdmin) { return; }
         if (Recycle_N_ReclaimPlugin.discardInvEnabled.Value == Recycle_N_ReclaimPlugin.Toggle.Off || !Recycle_N_ReclaimPlugin.hotKey.Value.IsDown() || ___m_dragItem == null || !___m_dragInventory.ContainsItem(___m_dragItem))
             return;
 
