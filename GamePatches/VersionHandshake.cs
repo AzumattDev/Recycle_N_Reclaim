@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Security.Cryptography;
 using HarmonyLib;
 
 namespace Recycle_N_Reclaim.GamePatches
@@ -18,6 +21,7 @@ namespace Recycle_N_Reclaim.GamePatches
             Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogInfo("Invoking version check");
             ZPackage zpackage = new();
             zpackage.Write(Recycle_N_ReclaimPlugin.ModVersion);
+            zpackage.Write(RpcHandlers.ComputeHashForMod().Replace("-", ""));
             peer.m_rpc.Invoke($"{Recycle_N_ReclaimPlugin.ModName}_VersionCheck", zpackage);
         }
     }
@@ -37,7 +41,7 @@ namespace Recycle_N_Reclaim.GamePatches
 
         private static void Postfix(ZNet __instance)
         {
-            ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.instance.GetServerPeerID(), "RequestAdminSync",
+            ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.instance.GetServerPeerID(), "RNRRequestAdminSync",
                 new ZPackage());
         }
     }
@@ -76,17 +80,17 @@ namespace Recycle_N_Reclaim.GamePatches
         public static void RPC_Recycle_N_Reclaim_Version(ZRpc rpc, ZPackage pkg)
         {
             string? version = pkg.ReadString();
-            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogInfo("Version check, local: " +
-                                                                    Recycle_N_ReclaimPlugin.ModVersion +
-                                                                    ",  remote: " + version);
-            if (version != Recycle_N_ReclaimPlugin.ModVersion)
+            string? hash = pkg.ReadString();
+
+            var hashForAssembly = ComputeHashForMod().Replace("-", "");
+
+            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogInfo($"Hash/Version check, local: {Recycle_N_ReclaimPlugin.ModVersion} {hashForAssembly} remote: {version} {hash}");
+            if (hash != hashForAssembly || version != Recycle_N_ReclaimPlugin.ModVersion)
             {
-                Recycle_N_ReclaimPlugin.ConnectionError =
-                    $"{Recycle_N_ReclaimPlugin.ModName} Installed: {Recycle_N_ReclaimPlugin.ModVersion}\n Needed: {version}";
+                Recycle_N_ReclaimPlugin.ConnectionError = $"WardIsLove Installed: {Recycle_N_ReclaimPlugin.ModVersion} {hashForAssembly}\n Needed: {version} {hash}";
                 if (!ZNet.instance.IsServer()) return;
                 // Different versions - force disconnect client from server
-                Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogWarning(
-                    $"Peer ({rpc.m_socket.GetHostName()}) has incompatible version, disconnecting");
+                Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogWarning($"Peer ({rpc.m_socket.GetHostName()}) has incompatible version, disconnecting...");
                 rpc.Invoke("Error", 3);
             }
             else
@@ -94,17 +98,30 @@ namespace Recycle_N_Reclaim.GamePatches
                 if (!ZNet.instance.IsServer())
                 {
                     // Enable mod on client if versions match
-                    Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogInfo(
-                        "Received same version from server!");
+                    Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogInfo("Received same version from server!");
                 }
                 else
                 {
                     // Add client to validated list
-                    Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogInfo(
-                        $"Adding peer ({rpc.m_socket.GetHostName()}) to validated list");
+                    Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogInfo($"Adding peer ({rpc.m_socket.GetHostName()}) to validated list");
                     ValidatedPeers.Add(rpc);
                 }
             }
+        }
+
+        public static string ComputeHashForMod()
+        {
+            using SHA256 sha256Hash = SHA256.Create();
+            // ComputeHash - returns byte array  
+            byte[] bytes = sha256Hash.ComputeHash(File.ReadAllBytes(Assembly.GetExecutingAssembly().Location));
+            // Convert byte array to a string   
+            System.Text.StringBuilder builder = new();
+            foreach (byte b in bytes)
+            {
+                builder.Append(b.ToString("X2"));
+            }
+
+            return builder.ToString();
         }
     }
 }
