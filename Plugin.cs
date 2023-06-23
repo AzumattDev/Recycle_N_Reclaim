@@ -25,7 +25,7 @@ namespace Recycle_N_Reclaim
         private const string ModGUID = Author + "." + ModName;
         private static string ConfigFileName = ModGUID + ".cfg";
         private static string ConfigFileFullPath = Paths.ConfigPath + Path.DirectorySeparatorChar + ConfigFileName;
-        internal static Assembly epicLootAssembly;
+        internal static Assembly epicLootAssembly = null;
         internal static string ConnectionError = "";
         public static StationRecyclingTabHolder RecyclingTabButtonHolder { get; private set; }
         private ContainerRecyclingButtonHolder _containerRecyclingButton;
@@ -219,12 +219,12 @@ namespace Recycle_N_Reclaim
         private static ConfigEntry<Toggle> _serverConfigLocked = null!;
 
         /* Inventory Discard */
-        public static ConfigEntry<KeyboardShortcut> hotKey;
-        public static ConfigEntry<Toggle> discardInvEnabled;
-        public static ConfigEntry<Toggle> lockToAdmin;
-        public static ConfigEntry<Toggle> returnUnknownResources;
-        public static ConfigEntry<Toggle> returnEnchantedResources;
-        public static ConfigEntry<float> returnResources;
+        public static ConfigEntry<KeyboardShortcut> hotKey = null!;
+        public static ConfigEntry<Toggle> discardInvEnabled = null!;
+        public static ConfigEntry<Toggle> lockToAdmin = null!;
+        public static ConfigEntry<Toggle> returnUnknownResources = null!;
+        public static ConfigEntry<Toggle> returnEnchantedResources = null!;
+        public static ConfigEntry<float> returnResources = null!;
 
         /* Simple Recycling */
 

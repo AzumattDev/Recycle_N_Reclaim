@@ -245,7 +245,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             if (analysisContext.RecyclingImpediments.Count == 0)
                 igui.m_recipeDecription.text = "\nAll requirements are <color=orange>fulfilled</color>";
             else
-                igui.m_recipeDecription.text = "\nRecycling blocked for these reasons:\n\n<size=10>" + $"{string.Join("\n", analysisContext.RecyclingImpediments)}" + $"</size>";
+                igui.m_recipeDecription.text = "\nRecycling blocked for these reasons:\n\n<size=15>" + $"{string.Join("\n", analysisContext.RecyclingImpediments)}" + $"</size>";
 
             if (itemData != null)
             {
