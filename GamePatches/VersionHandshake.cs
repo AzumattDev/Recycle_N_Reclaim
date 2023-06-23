@@ -33,8 +33,7 @@ namespace Recycle_N_Reclaim.GamePatches
         {
             if (!__instance.IsServer() || RpcHandlers.ValidatedPeers.Contains(rpc)) return true;
             // Disconnect peer if they didn't send mod version at all
-            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogWarning(
-                $"Peer ({rpc.m_socket.GetHostName()}) never sent version or couldn't due to previous disconnect, disconnecting");
+            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogWarning($"Peer ({rpc.m_socket.GetHostName()}) never sent version or couldn't due to previous disconnect, disconnecting");
             rpc.Invoke("Error", 3);
             return false; // Prevent calling underlying method
         }

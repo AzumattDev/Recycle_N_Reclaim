@@ -25,7 +25,14 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
         private void OnDestroy()
         {
-            Destroy(_recyclingTabButtonGameObject.gameObject);
+            try
+            {
+                Destroy(_recyclingTabButtonGameObject.gameObject);
+            }
+            catch
+            {
+                // ignored
+            }
         }
 
         private void SetupTabButton()
@@ -44,7 +51,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
             _recyclingTabButtonComponent = _recyclingTabButtonGameObject.GetComponent<Button>();
             _recyclingTabButtonComponent.interactable = true;
-            _recyclingTabButtonComponent.onClick.RemoveAllListeners();
+            _recyclingTabButtonComponent.onClick = new Button.ButtonClickedEvent();
             _recyclingTabButtonComponent.onClick.AddListener(OnRecycleClick);
             bool shouldBeActive = Player.m_localPlayer?.GetCurrentCraftingStation() != null;
             _recyclingTabButtonGameObject.SetActive(shouldBeActive);

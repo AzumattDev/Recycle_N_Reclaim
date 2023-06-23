@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
 using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
@@ -55,12 +57,12 @@ namespace Recycle_N_Reclaim
 
             /* Inventory Discard */
             /* Discard Items in Inventory */
-            discardInvEnabled = config("2 - Inventory Discard", "Enabled", Toggle.On, new ConfigDescription("If on, you'll be able to discard things inside of the player inventory.", null, new ConfigurationManagerAttributes { Order = 2 }));
-            lockToAdmin = config("2 - Inventory Discard", "Lock to Admin", Toggle.On, new ConfigDescription("If on, only admin's can use this feature.", null, new ConfigurationManagerAttributes { Order = 1 }));
-            hotKey = config("2 - Inventory Discard", "DiscardHotkey(s)", new KeyboardShortcut(KeyCode.Delete), new ConfigDescription("The hotkey to discard an item or regain resources. Must be enabled", new AcceptableShortcuts()), false);
-            returnUnknownResources = config("2 - Inventory Discard", "ReturnUnknownResources", Toggle.Off, "If on, discarding an item in the inventory will return resources if recipe is unknown");
-            returnEnchantedResources = config("2 - Inventory Discard", "ReturnEnchantedResources", Toggle.Off, "If on and Epic Loot is installed, discarding an item in the inventory will return resources for Epic Loot enchantments");
-            returnResources = config("2 - Inventory Discard", "ReturnResources", 1f, "Fraction of resources to return (0.0 - 1.0). This setting is forced to be between 0 and 1. Any higher or lower values will be set to 0 or 1 respectively.");
+            discardInvEnabled = config("2 - Inventory Recycle", "Enabled", Toggle.On, new ConfigDescription("If on, you'll be able to discard things inside of the player inventory.", null, new ConfigurationManagerAttributes { Order = 2 }));
+            lockToAdmin = config("2 - Inventory Recycle", "Lock to Admin", Toggle.On, new ConfigDescription("If on, only admin's can use this feature.", null, new ConfigurationManagerAttributes { Order = 1 }));
+            hotKey = config("2 - Inventory Recycle", "DiscardHotkey(s)", new KeyboardShortcut(KeyCode.Delete), new ConfigDescription("The hotkey to discard an item or regain resources. Must be enabled", new AcceptableShortcuts()), false);
+            returnUnknownResources = config("2 - Inventory Recycle", "ReturnUnknownResources", Toggle.Off, "If on, discarding an item in the inventory will return resources if recipe is unknown");
+            returnEnchantedResources = config("2 - Inventory Recycle", "ReturnEnchantedResources", Toggle.Off, "If on and Epic Loot is installed, discarding an item in the inventory will return resources for Epic Loot enchantments");
+            returnResources = config("2 - Inventory Recycle", "ReturnResources", 1f, "Fraction of resources to return (0.0 - 1.0). This setting is forced to be between 0 and 1. Any higher or lower values will be set to 0 or 1 respectively.");
             returnResources.SettingChanged += (sender, args) =>
             {
                 if (returnResources.Value > 1.0f) returnResources.Value = 1.0f;
@@ -138,7 +140,7 @@ namespace Recycle_N_Reclaim
                 "Main purpose of this is to prevent showing food as a recyclable item,\n" +
                 "but can be extended further if needed.\n" +
                 "\n" +
-                "Full list of stations used in recipes as of 0.147.3:\n" +
+                "Full list of stations used in recipes as of 0.216.9:\n" +
                 "- identifier: `forge` in game name: Forge\n" +
                 "- identifier: `blackforge` in game name: Black Forge\n" +
                 "- identifier: `piece_workbench` in game name: Workbench\n" +
@@ -163,6 +165,7 @@ namespace Recycle_N_Reclaim
 
         private void Start()
         {
+            AutoDoc();
             _containerRecyclingButton = gameObject.AddComponent<ContainerRecyclingButtonHolder>();
             _containerRecyclingButton.OnRecycleAllTriggered += ContainerRecyclingTriggered;
             RecyclingTabButtonHolder = gameObject.AddComponent<StationRecyclingTabHolder>();
@@ -170,6 +173,36 @@ namespace Recycle_N_Reclaim
             if (!Chainloader.PluginInfos.ContainsKey("randyknapp.mods.epicloot")) return;
             epicLootAssembly = Chainloader.PluginInfos["randyknapp.mods.epicloot"].Instance.GetType().Assembly;
             Recycle_N_ReclaimLogger.LogDebug("Epic Loot found, providing compatibility");
+        }
+
+        private void AutoDoc()
+        {
+#if DEBUG
+            // Store Regex to get all characters after a [
+            Regex regex = new(@"\[(.*?)\]");
+
+            // Strip using the regex above from Config[x].Description.Description
+            string Strip(string x) => regex.Match(x).Groups[1].Value;
+            StringBuilder sb = new();
+            string lastSection = "";
+            foreach (ConfigDefinition x in Config.Keys)
+            {
+                // skip first line
+                if (x.Section != lastSection)
+                {
+                    lastSection = x.Section;
+                    sb.Append($"{Environment.NewLine}`{x.Section}`{Environment.NewLine}");
+                }
+
+                sb.Append($"\n{x.Key} [{Strip(Config[x].Description.Description)}]" +
+                          $"{Environment.NewLine}   * {Config[x].Description.Description.Replace("[Synced with Server]", "").Replace("[Not Synced with Server]", "")}" +
+                          $"{Environment.NewLine}     * Default Value: {Config[x].GetSerializedValue()}{Environment.NewLine}");
+            }
+
+            File.WriteAllText(
+                Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, $"{ModName}_AutoDoc.md"),
+                sb.ToString());
+#endif
         }
 
         private void OnDestroy()
