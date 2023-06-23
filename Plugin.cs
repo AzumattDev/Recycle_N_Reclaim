@@ -105,7 +105,7 @@ namespace Recycle_N_Reclaim
 
             // UI
             ContainerRecyclingEnabled = config("4 - UI", "ContainerRecyclingEnabled",
-                Toggle.Off, "If enabled, the mod will display the container recycling button");
+                Toggle.On, "If enabled, the mod will display the container recycling button");
 
             NotifyOnSalvagingImpediments = config("4 - UI", "NotifyOnSalvagingImpediments", Toggle.On,
                 "If enabled and recycling a specific item runs into any issues, the mod will print a message\n" +

@@ -1,6 +1,8 @@
 ﻿# Description
 
-## A mod that allows you to recycle items back into resources used to make them. Adds a 'Reclaim' tab/button to the crafting menu. Additionally can be used inside of your inventory directly.
+<img src="https://github.com/AzumattDev/Recycle_N_Reclaim/assets/80414405/69371c0f-d56a-4019-807b-13696778a1f1" alt="5B0B26B8-8064-421E-8888-6D40E71C56DC-min" width="100%" style="max-width: 1280px; height: auto;">
+
+## A mod that allows you to recycle/reclaim items back into resources used to make them. Adds a 'Reclaim' tab/button to the crafting menu. Additionally can be used inside of your inventory directly.
 
 `Version checks with itself. If installed on the server, it will kick clients who do not have it installed.`
 
@@ -24,7 +26,8 @@ of [OdinsInventoryDiscard](https://valheim.thunderstore.io/package/OdinPlus/Odin
 The aim is to provide an all in one solution for
 recycling items back into resources.
 
-All code changes after the initial release of this mod were written by me. This includes the merging of the two mods and
+All code changes after the initial release of this mod were written by me. This includes the merging of the two mods,
+addition of ServerSync and
 any improvements made to the code.
 
 <details>
@@ -70,6 +73,10 @@ any improvements made to the code.
 <details><summary><b>Configuration Options</b></summary>
 
 ### Please note that Inventory Recycle and Reclaiming are different sections as well as different functionality within the game. Recycling happens only in the inventory and (by default) limited to admins only. Change the config should you wish to give this ability to everyone. Admins will always (by default) get 100% of the resources returned to them. Reclaiming happens in the crafting menu and is available to everyone. The amount of resources returned is configurable but is 50% by default.
+
+#### What this looks like in the [BepInEx Configuration Manager](https://valheim.thunderstore.io/package/Azumatt/Official_BepInEx_ConfigurationManager/)
+
+![image](https://github.com/AzumattDev/Recycle_N_Reclaim/assets/80414405/00f139cf-30a5-4433-b154-4c544aa1efd9)
 
 `1 - General`
 
@@ -157,7 +164,7 @@ ContainerButtonPosition [Synced with Server]
 ContainerRecyclingEnabled [Synced with Server]
 
 * If enabled, the mod will display the container recycling button
-    * Default Value: Off
+    * Default Value: On
 
 NotifyOnSalvagingImpediments [Synced with Server]
 
