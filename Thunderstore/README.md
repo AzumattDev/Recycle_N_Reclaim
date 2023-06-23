@@ -1,4 +1,4 @@
-﻿# Description
+# Description
 
 <img src="https://github.com/AzumattDev/Recycle_N_Reclaim/assets/80414405/69371c0f-d56a-4019-807b-13696778a1f1" alt="5B0B26B8-8064-421E-8888-6D40E71C56DC-min" width="100%" style="max-width: 1280px; height: auto;">
 
