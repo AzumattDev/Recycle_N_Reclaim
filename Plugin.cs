@@ -60,7 +60,12 @@ namespace Recycle_N_Reclaim
             hotKey = config("2 - Inventory Discard", "DiscardHotkey(s)", new KeyboardShortcut(KeyCode.Delete), new ConfigDescription("The hotkey to discard an item or regain resources. Must be enabled", new AcceptableShortcuts()), false);
             returnUnknownResources = config("2 - Inventory Discard", "ReturnUnknownResources", Toggle.Off, "If on, discarding an item in the inventory will return resources if recipe is unknown");
             returnEnchantedResources = config("2 - Inventory Discard", "ReturnEnchantedResources", Toggle.Off, "If on and Epic Loot is installed, discarding an item in the inventory will return resources for Epic Loot enchantments");
-
+            returnResources = config("2 - Inventory Discard", "ReturnResources", 1f, "Fraction of resources to return (0.0 - 1.0). This setting is forced to be between 0 and 1. Any higher or lower values will be set to 0 or 1 respectively.");
+            returnResources.SettingChanged += (sender, args) =>
+            {
+                if (returnResources.Value > 1.0f) returnResources.Value = 1.0f;
+                if (returnResources.Value < 0f) returnResources.Value = 0f;
+            };
 
             /* Simple Recycling */
             RecyclingRate = config("3 - Reclaiming", "RecyclingRate", 0.5f,
