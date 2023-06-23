@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Recycle_N_Reclaim.GamePatches.Recycling
 {
-    public static class Recycler
+    public static class Reclaimer
     {
         public static void RecycleInventoryForAllRecipes(Inventory inventory, Player player)
         {
@@ -13,7 +13,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             // copy the inventory, otherwise collection will constantly change causing issues
             itemListSnapshot.AddRange(inventory.GetAllItems());
             var analysisList = new List<RecyclingAnalysisContext>();
-            for (var index = 0; index < itemListSnapshot.Count; index++)
+            for (var index = 0; index < itemListSnapshot.Count; ++index)
             {
                 var item = itemListSnapshot[index];
                 var analysisContext = new RecyclingAnalysisContext(item);
@@ -116,7 +116,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"Inventory changes requested");
             foreach (var entry in analysisContext.Entries)
             {
-                if (entry.Amount == 0 && entry.InitialRecipeHadZero) continue;
+                if (entry is { Amount: 0, InitialRecipeHadZero: true }) continue;
                 var addedItem = inventory.AddItem(
                     entry.Prefab.name, entry.Amount, entry.mQuality,
                     entry.mVariant, player.GetPlayerID(), player.GetPlayerName()
@@ -197,8 +197,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             if (!player.IsRecipeKnown(analysisContext.Recipe.m_item.m_itemData.m_shared.m_name) &&
                 Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.Off)
             {
-                analysisContext.RecyclingImpediments.Add(
-                    $"Recipe for {Localization.instance.Localize(item.m_shared.m_name)} not known.");
+                analysisContext.RecyclingImpediments.Add($"Recipe for {Localization.instance.Localize(item.m_shared.m_name)} not known.");
             }
 
             return true;
@@ -213,7 +212,8 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                              (double)entry.Prefab.GetComponent<ItemDrop>().m_itemData.m_shared.m_maxStackSize));
 
             if (emptySlotsAmount >= needsSlots) return;
-            analysisContext.RecyclingImpediments.Add($"Need {needsSlots} slots but only {emptySlotsAmount} were available");
+            var message = emptySlotsAmount == 0 ? "none" : "only" + emptySlotsAmount;
+            analysisContext.RecyclingImpediments.Add($"Need {needsSlots} slots but {message} were available");
         }
 
         private static void AnalyzeMaterialYieldForItem(RecyclingAnalysisContext analysisContext)
@@ -237,12 +237,47 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
 
                 var (finalAmount, initialRecipeHadZero) = CalculateFinalAmount(itemData, resource, amountToCraftedRecipeAmountPercentage,
                     recyclingRate);
-                analysisContext.Entries.Add(
-                    new RecyclingAnalysisContext.RecyclingYieldEntry(preFab, rItemData, finalAmount, rItemData.m_quality,
-                        rItemData.m_variant, initialRecipeHadZero));
+                analysisContext.Entries.Add(new RecyclingAnalysisContext.ReclaimingYieldEntry(preFab, rItemData, finalAmount, rItemData.m_quality, rItemData.m_variant, initialRecipeHadZero));
+                if (Jewelcrafting.API.IsLoaded())
+                {
+                    CheckJewelCrafting(analysisContext);
+                }
+
                 if (Recycle_N_ReclaimPlugin.PreventZeroResourceYields.Value == Recycle_N_ReclaimPlugin.Toggle.On && finalAmount == 0 && !initialRecipeHadZero)
                 {
                     analysisContext.RecyclingImpediments.Add($"Recycling would yield 0 of {Localization.instance.Localize(resource.m_resItem.m_itemData.m_shared.m_name)}");
+                }
+            }
+        }
+
+        private static void CheckJewelCrafting(RecyclingAnalysisContext recyclingAnalysisContext)
+        {
+            // TODO: It's seeming to always return one more of the gems than it's supposed to. I'm not sure why. I'll have to look into it later.
+            var itemData = recyclingAnalysisContext.Item;
+            if (Jewelcrafting.API.GetGems(itemData).Any())
+            {
+                var gemsOnItem = Jewelcrafting.API.GetGems(itemData);
+
+                Dictionary<ItemDrop, ItemDrop.ItemData> gemItemData = gemsOnItem
+                    .Where(gem => gem != null)
+                    .Select(gem => ObjectDB.instance.GetItemPrefab(gem.gemPrefab).GetComponent<ItemDrop>())
+                    .Where(itemDrop => itemDrop != null)
+                    .ToDictionary(itemDrop => itemDrop, itemDrop => itemDrop.m_itemData);
+
+                foreach (var gemItem in gemItemData)
+                {
+                    bool recipeCheck = ObjectDB.instance.GetRecipe(gemItem.Value) && !Player.m_localPlayer.IsRecipeKnown(gemItem.Value.m_shared.m_name);
+                    bool knownMaterialCheck = !Player.m_localPlayer.m_knownMaterial.Contains(gemItem.Value.m_shared.m_name);
+
+                    if (Recycle_N_ReclaimPlugin.returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off && (recipeCheck || knownMaterialCheck))
+                    {
+                        recyclingAnalysisContext.RecyclingImpediments.Add($"Recipe for {Localization.instance.Localize(gemItem.Value.m_shared.m_name)} not known.");
+                        return;
+                    }
+
+                    recyclingAnalysisContext.Entries.Add(
+                        new RecyclingAnalysisContext.ReclaimingYieldEntry(gemItem.Key.gameObject, gemItem.Value, ObjectDB.instance.GetRecipe(gemItem.Value).m_amount,
+                            gemItem.Value.m_quality, gemItem.Value.m_variant, false));
                 }
             }
         }
@@ -253,7 +288,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             var result = new Result();
 
             var amountPerLevelSum = Enumerable.Range(1, itemData.m_quality)
-                .Select(level => resource.GetAmount(level))
+                .Select(resource.GetAmount)
                 .Sum();
 
             if (amountPerLevelSum == 0)

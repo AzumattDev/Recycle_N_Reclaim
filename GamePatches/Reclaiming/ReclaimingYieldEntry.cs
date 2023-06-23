@@ -13,7 +13,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
         public List<string> RecyclingImpediments { get; } = new();
 
         public List<string> DisplayImpediments { get; } = new();
-        public List<RecyclingYieldEntry> Entries { get; } = new();
+        public List<ReclaimingYieldEntry> Entries { get; } = new();
 
         public bool ShouldErrorDumpAnalysis { get; set; }
 
@@ -22,7 +22,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             Item = item;
         }
 
-        public readonly struct RecyclingYieldEntry
+        public readonly struct ReclaimingYieldEntry
         {
             public readonly GameObject Prefab;
             public readonly ItemDrop.ItemData RecipeItemData;
@@ -31,7 +31,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             public readonly int mVariant;
             public readonly bool InitialRecipeHadZero;
 
-            public RecyclingYieldEntry(GameObject prefab, ItemDrop.ItemData itemData, int amount, int mQuality, int mVariant, bool initialRecipeHadZero)
+            public ReclaimingYieldEntry(GameObject prefab, ItemDrop.ItemData itemData, int amount, int mQuality, int mVariant, bool initialRecipeHadZero)
             {
                 this.Prefab = prefab;
                 this.RecipeItemData = itemData;
