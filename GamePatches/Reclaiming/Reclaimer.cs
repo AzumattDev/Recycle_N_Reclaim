@@ -212,7 +212,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                              (double)entry.Prefab.GetComponent<ItemDrop>().m_itemData.m_shared.m_maxStackSize));
 
             if (emptySlotsAmount >= needsSlots) return;
-            var message = emptySlotsAmount == 0 ? "none" : "only" + emptySlotsAmount;
+            var message = emptySlotsAmount == 0 ? "none" : "only " + emptySlotsAmount;
             analysisContext.RecyclingImpediments.Add($"Need {needsSlots} slots but {message} were available");
         }
 

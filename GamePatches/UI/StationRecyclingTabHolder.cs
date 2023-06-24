@@ -264,7 +264,14 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
             SetActive(igui.m_variantButton.gameObject, igui.get_m_selectedRecipe().Key.m_item.m_itemData.m_shared.m_variants > 1 && igui.get_m_selectedRecipe().Value == null);
 
-            SetupRequirementList(analysisContext);
+            if (Recycle_N_ReclaimPlugin.epicLootAssembly == null)
+            {
+                SetupRequirementList(analysisContext);
+            }
+            else
+            {
+                SetupRequirementListEpicLoot(analysisContext);
+            }
 
             SetActive(igui.m_minStationLevelIcon.gameObject, false);
             igui.m_craftButton.interactable = analysisContext.RecyclingImpediments.Count == 0;
@@ -322,8 +329,9 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             }
         }
 
-
-        private void SetupRequirementList(RecyclingAnalysisContext analysisContexts)
+        /* TLDR; For some reason, EpicLoot doesn't like the way the vanilla game handles the recipe requirements UI
+         or at least the way I have to do it below, so we have to stick to my older method...which is compatible with EpicLoot. */
+        private void SetupRequirementListEpicLoot(RecyclingAnalysisContext analysisContexts)
         {
             var igui = InventoryGui.instance;
 
@@ -334,7 +342,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
                 var elementTransform = igui.m_recipeRequirementList[i].transform;
                 if (i < filteredEntries.Count)
                 {
-                    SetupRequirement(elementTransform, filteredEntries[i]);
+                    SetupRequirementEpicLoot(elementTransform, filteredEntries[i]);
                 }
                 else
                 {
@@ -344,7 +352,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             }
         }
 
-        public static void SetupRequirement(Transform elementRoot,
+        public static void SetupRequirementEpicLoot(Transform elementRoot,
             RecyclingAnalysisContext.ReclaimingYieldEntry entry)
         {
             var component1 = elementRoot.transform.Find("res_icon").GetComponent<Image>();
@@ -360,6 +368,53 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             component2.text = Localization.instance.Localize(entry.RecipeItemData.m_shared.m_name);
             component3.text = entry.Amount.ToString();
             component3.color = Color.white;
+        }
+
+        private void SetupRequirementList(RecyclingAnalysisContext analysisContexts)
+        {
+            var igui = InventoryGui.instance;
+            int index1 = 0;
+            var filteredEntries = analysisContexts.Entries.Where(entry => entry.Amount != 0).ToList(); // Filter before the loop to avoid unnecessary iterations
+
+            int num = 0;
+            if (filteredEntries.Count > 4)
+                num = (int)Time.fixedTime % (int)Mathf.Ceil((float)filteredEntries.Count / (float)igui.m_recipeRequirementList.Length) * igui.m_recipeRequirementList.Length;
+
+            for (int index2 = num; index2 < filteredEntries.Count; ++index2)
+            {
+                if (SetupRequirement(igui.m_recipeRequirementList[index1].transform, filteredEntries[index2]))
+                    ++index1;
+                if (index1 >= igui.m_recipeRequirementList.Length)
+                    break;
+            }
+
+            for (; index1 < igui.m_recipeRequirementList.Length; ++index1)
+                InventoryGui.HideRequirement(igui.m_recipeRequirementList[index1].transform);
+        }
+
+        public static bool SetupRequirement(Transform elementRoot,
+            RecyclingAnalysisContext.ReclaimingYieldEntry entry)
+        {
+            var component1 = elementRoot.transform.Find("res_icon").GetComponent<Image>();
+            var component2 = elementRoot.transform.Find("res_name").GetComponent<Text>();
+            var component3 = elementRoot.transform.Find("res_amount").GetComponent<Text>();
+            var component4 = elementRoot.GetComponent<UITooltip>();
+            component1.gameObject.SetActive(true);
+            component2.gameObject.SetActive(true);
+            component3.gameObject.SetActive(true);
+            component1.sprite = entry.RecipeItemData.GetIcon();
+            component1.color = Color.white;
+            component4.m_text = Localization.instance.Localize(entry.RecipeItemData.m_shared.m_name);
+            component2.text = Localization.instance.Localize(entry.RecipeItemData.m_shared.m_name);
+            component3.text = entry.Amount.ToString();
+            component3.color = Color.white;
+            if (entry.Amount <= 0)
+            {
+                InventoryGui.HideRequirement(elementRoot);
+                return false;
+            }
+
+            return true;
         }
     }
 }
