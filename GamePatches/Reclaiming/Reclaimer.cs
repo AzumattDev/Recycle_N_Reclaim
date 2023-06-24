@@ -216,7 +216,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             analysisContext.RecyclingImpediments.Add($"Need {needsSlots} slots but {message} were available");
         }
 
-        
+
         private static void AnalyzeMaterialYieldForItem(RecyclingAnalysisContext analysisContext)
         {
             var recyclingRate = Recycle_N_ReclaimPlugin.RecyclingRate.Value;
@@ -250,7 +250,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
 
             bool isMagic = false;
             bool cancel = false;
-            if (Recycle_N_ReclaimPlugin.epicLootAssembly != null && Recycle_N_ReclaimPlugin.returnEnchantedResources.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+            if (Recycle_N_ReclaimPlugin.epicLootAssembly != null && Recycle_N_ReclaimPlugin.returnEnchantedResourcesReclaiming.Value == Recycle_N_ReclaimPlugin.Toggle.On)
                 isMagic = (bool)UpdateItemDragPatch.isMagicMethod?.Invoke(null, new[] { itemData });
 
             if (isMagic)
@@ -261,7 +261,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
 
                 foreach (KeyValuePair<ItemDrop, int> kvp in magicReqs)
                 {
-                    if (Recycle_N_ReclaimPlugin.returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off &&
+                    if (Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.Off &&
                         (ObjectDB.instance.GetRecipe(kvp.Key.m_itemData) &&
                          !Player.m_localPlayer.IsRecipeKnown(kvp.Key.m_itemData.m_shared.m_name) ||
                          !Player.m_localPlayer.m_knownMaterial.Contains(kvp.Key.m_itemData.m_shared.m_name)))
@@ -281,12 +281,12 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 }
             }
 
-            if (Jewelcrafting.API.IsLoaded())
+            if (Jewelcrafting.API.IsLoaded() && Recycle_N_ReclaimPlugin.returnEnchantedResourcesReclaiming.Value == Recycle_N_ReclaimPlugin.Toggle.On)
             {
                 CheckJewelCrafting(analysisContext);
             }
         }
-        
+
         private static void CheckJewelCrafting(RecyclingAnalysisContext recyclingAnalysisContext)
         {
             var itemData = recyclingAnalysisContext.Item;
@@ -304,7 +304,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                     bool recipeCheck = ObjectDB.instance.GetRecipe(gemItem.Value) && !Player.m_localPlayer.IsRecipeKnown(gemItem.Value.m_shared.m_name);
                     bool knownMaterialCheck = !Player.m_localPlayer.m_knownMaterial.Contains(gemItem.Value.m_shared.m_name);
 
-                    if (Recycle_N_ReclaimPlugin.returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off && (recipeCheck || knownMaterialCheck))
+                    if (Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.Off && (recipeCheck || knownMaterialCheck))
                     {
                         recyclingAnalysisContext.RecyclingImpediments.Add($"Recipe for {Localization.instance.Localize(gemItem.Value.m_shared.m_name)} not known.");
                         return;

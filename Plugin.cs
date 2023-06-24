@@ -23,7 +23,7 @@ namespace Recycle_N_Reclaim
     public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
     {
         internal const string ModName = "Recycle_N_Reclaim";
-        internal const string ModVersion = "1.0.0";
+        internal const string ModVersion = "1.1.0";
         internal const string Author = "Azumatt";
         private const string ModGUID = Author + "." + ModName;
         private static string ConfigFileName = ModGUID + ".cfg";
@@ -62,7 +62,7 @@ namespace Recycle_N_Reclaim
             lockToAdmin = config("2 - Inventory Recycle", "Lock to Admin", Toggle.On, new ConfigDescription("If on, only admin's can use this feature.", null, new ConfigurationManagerAttributes { Order = 1 }));
             hotKey = config("2 - Inventory Recycle", "DiscardHotkey(s)", new KeyboardShortcut(KeyCode.Delete), new ConfigDescription("The hotkey to discard an item or regain resources. Must be enabled", new AcceptableShortcuts()), false);
             returnUnknownResources = config("2 - Inventory Recycle", "ReturnUnknownResources", Toggle.Off, "If on, discarding an item in the inventory will return resources if recipe is unknown");
-            returnEnchantedResources = config("2 - Inventory Recycle", "ReturnEnchantedResources", Toggle.Off, "If on and Epic Loot is installed, discarding an item in the inventory will return resources for Epic Loot enchantments");
+            returnEnchantedResources = config("2 - Inventory Recycle", "ReturnEnchantedResources", Toggle.On, "If on and Epic Loot or Jewelcrafting is installed, discarding an item in the inventory will return resources for Epic Loot enchantments or Jewelcrafting gems");
             returnResources = config("2 - Inventory Recycle", "ReturnResources", 1f, "Fraction of resources to return (0.0 - 1.0). This setting is forced to be between 0 and 1. Any higher or lower values will be set to 0 or 1 respectively.");
             returnResources.SettingChanged += (sender, args) =>
             {
@@ -70,7 +70,7 @@ namespace Recycle_N_Reclaim
                 if (returnResources.Value < 0f) returnResources.Value = 0f;
             };
 
-            /* Simple Recycling */
+            /* Reclaiming */
             RecyclingRate = config("3 - Reclaiming", "RecyclingRate", 0.5f,
                 "Rate at which the resources are recycled. Value must be between 0 and 1.\n" +
                 "The mod always rolls *down*, so if you were supposed to get 2.5 items, you would only receive 2. If the recycling rate is 0.5 (50%), " +
@@ -91,6 +91,8 @@ namespace Recycle_N_Reclaim
                 "If enabled, recycling will also check for the required crafting station type and level.\n" +
                 "If disabled, will ignore all crafting station requirements altogether.\n" +
                 "Enabled by default, to keep things close to how Valheim operates.");
+
+            returnEnchantedResourcesReclaiming = config("3 - Reclaiming", "ReturnEnchantedResources", Toggle.On, "If on and Epic Loot or Jewelcrafting is installed, discarding an item in the inventory will return resources for Epic Loot enchantments or Jewelcrafting gems");
 
             PreventZeroResourceYields = config("3 - Reclaiming", "PreventZeroResourceYields", Toggle.On,
                 "If enabled and recycling an item that would yield 0 of any material,\n" +
@@ -309,6 +311,7 @@ namespace Recycle_N_Reclaim
         public static ConfigEntry<Toggle> DebugAllowSpammyLogs = null!;
         public static ConfigEntry<Toggle> HideEquippedItemsInRecyclingTab = null!;
         public static ConfigEntry<Toggle> RequireExactCraftingStationForRecycling = null!;
+        public static ConfigEntry<Toggle> returnEnchantedResourcesReclaiming = null!;
 
 
         private ConfigEntry<T> config<T>(string group, string name, T value, ConfigDescription description,

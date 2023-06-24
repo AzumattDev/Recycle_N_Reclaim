@@ -71,7 +71,7 @@ public static class UpdateItemDragPatch
                     }
                 }
 
-                if (Jewelcrafting.API.IsLoaded())
+                if (Jewelcrafting.API.IsLoaded() && Recycle_N_ReclaimPlugin.returnEnchantedResources.Value == Recycle_N_ReclaimPlugin.Toggle.On)
                 {
                     if (Jewelcrafting.API.GetGems(___m_dragItem).Any())
                     {
