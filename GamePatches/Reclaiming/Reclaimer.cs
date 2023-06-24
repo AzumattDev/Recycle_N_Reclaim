@@ -216,18 +216,20 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             analysisContext.RecyclingImpediments.Add($"Need {needsSlots} slots but {message} were available");
         }
 
+        
         private static void AnalyzeMaterialYieldForItem(RecyclingAnalysisContext analysisContext)
         {
             var recyclingRate = Recycle_N_ReclaimPlugin.RecyclingRate.Value;
             var itemData = analysisContext.Item;
             var recipe = analysisContext.Recipe;
-            // Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"Gathering recycling result for {itemData.m_shared.m_name}");
             var amountToCraftedRecipeAmountPercentage = itemData.m_stack / (double)recipe.m_amount;
+
             foreach (var resource in recipe.m_resources)
             {
                 var rItemData = resource.m_resItem.m_itemData;
                 var preFab = ObjectDB.instance.m_items.FirstOrDefault(item =>
                     item.GetComponent<ItemDrop>().m_itemData.m_shared.m_name == rItemData.m_shared.m_name);
+
                 if (preFab == null)
                 {
                     Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogWarning($"Could not find a prefab for {itemData.m_shared.m_name}! Won't be able to spawn items. You might want to report this!");
@@ -237,27 +239,27 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
 
                 var (finalAmount, initialRecipeHadZero) = CalculateFinalAmount(itemData, resource, amountToCraftedRecipeAmountPercentage,
                     recyclingRate);
+
                 analysisContext.Entries.Add(new RecyclingAnalysisContext.ReclaimingYieldEntry(preFab, rItemData, finalAmount, rItemData.m_quality, rItemData.m_variant, initialRecipeHadZero));
-                if (Jewelcrafting.API.IsLoaded())
-                {
-                    CheckJewelCrafting(analysisContext);
-                }
 
                 if (Recycle_N_ReclaimPlugin.PreventZeroResourceYields.Value == Recycle_N_ReclaimPlugin.Toggle.On && finalAmount == 0 && !initialRecipeHadZero)
                 {
                     analysisContext.RecyclingImpediments.Add($"Recycling would yield 0 of {Localization.instance.Localize(resource.m_resItem.m_itemData.m_shared.m_name)}");
                 }
             }
-        }
 
+            if (Jewelcrafting.API.IsLoaded())
+            {
+                CheckJewelCrafting(analysisContext);
+            }
+        }
+        
         private static void CheckJewelCrafting(RecyclingAnalysisContext recyclingAnalysisContext)
         {
-            // TODO: It's seeming to always return one more of the gems than it's supposed to. I'm not sure why. I'll have to look into it later.
             var itemData = recyclingAnalysisContext.Item;
-            if (Jewelcrafting.API.GetGems(itemData).Any())
+            var gemsOnItem = Jewelcrafting.API.GetGems(itemData);
+            if (gemsOnItem.Any())
             {
-                var gemsOnItem = Jewelcrafting.API.GetGems(itemData);
-
                 Dictionary<ItemDrop, ItemDrop.ItemData> gemItemData = gemsOnItem
                     .Where(gem => gem != null)
                     .Select(gem => ObjectDB.instance.GetItemPrefab(gem.gemPrefab).GetComponent<ItemDrop>())
@@ -275,9 +277,9 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                         return;
                     }
 
-                    recyclingAnalysisContext.Entries.Add(
-                        new RecyclingAnalysisContext.ReclaimingYieldEntry(gemItem.Key.gameObject, gemItem.Value, ObjectDB.instance.GetRecipe(gemItem.Value).m_amount,
-                            gemItem.Value.m_quality, gemItem.Value.m_variant, false));
+                    var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(gemItem.Key.gameObject, gemItem.Value, ObjectDB.instance.GetRecipe(gemItem.Value).m_amount,
+                        gemItem.Value.m_quality, gemItem.Value.m_variant, false);
+                    recyclingAnalysisContext.Entries.Add(yieldEntry);
                 }
             }
         }
