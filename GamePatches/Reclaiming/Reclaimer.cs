@@ -248,6 +248,39 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 }
             }
 
+            bool isMagic = false;
+            bool cancel = false;
+            if (Recycle_N_ReclaimPlugin.epicLootAssembly != null && Recycle_N_ReclaimPlugin.returnEnchantedResources.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+                isMagic = (bool)UpdateItemDragPatch.isMagicMethod?.Invoke(null, new[] { itemData });
+
+            if (isMagic)
+            {
+                int rarity = (int)UpdateItemDragPatch.getRarityMethod?.Invoke(null, new[] { itemData });
+                List<KeyValuePair<ItemDrop, int>> magicReqs =
+                    (List<KeyValuePair<ItemDrop, int>>)UpdateItemDragPatch.getEnchantCostsMethod?.Invoke(null, new object[] { itemData, rarity });
+
+                foreach (KeyValuePair<ItemDrop, int> kvp in magicReqs)
+                {
+                    if (Recycle_N_ReclaimPlugin.returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off &&
+                        (ObjectDB.instance.GetRecipe(kvp.Key.m_itemData) &&
+                         !Player.m_localPlayer.IsRecipeKnown(kvp.Key.m_itemData.m_shared.m_name) ||
+                         !Player.m_localPlayer.m_knownMaterial.Contains(kvp.Key.m_itemData.m_shared.m_name)))
+                    {
+                        analysisContext.RecyclingImpediments.Add($"Recipe for {Localization.instance.Localize(kvp.Key.m_itemData.m_shared.m_name)} not known.");
+                        return;
+                    }
+
+                    /*recipe.m_resources.ToList().Add(new Piece.Requirement
+                    {
+                        m_amount = kvp.Value,
+                        m_resItem = kvp.Key
+                    });*/
+                    var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(kvp.Key.gameObject, kvp.Key.m_itemData, ObjectDB.instance.GetRecipe(kvp.Key.m_itemData).m_amount,
+                        kvp.Key.m_itemData.m_quality, kvp.Key.m_itemData.m_variant, false);
+                    analysisContext.Entries.Add(yieldEntry);
+                }
+            }
+
             if (Jewelcrafting.API.IsLoaded())
             {
                 CheckJewelCrafting(analysisContext);
