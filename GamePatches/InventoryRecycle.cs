@@ -71,32 +71,35 @@ public static class UpdateItemDragPatch
                     }
                 }
 
-                if (Jewelcrafting.API.GetGems(___m_dragItem).Any())
+                if (Jewelcrafting.API.IsLoaded())
                 {
-                    var gemsOnItem = Jewelcrafting.API.GetGems(___m_dragItem);
-
-                    Dictionary<ItemDrop, ItemDrop.ItemData> gemItemData = gemsOnItem
-                        .Where(gem => gem != null)
-                        .Select(gem => ObjectDB.instance.GetItemPrefab(gem.gemPrefab).GetComponent<ItemDrop>())
-                        .Where(itemDrop => itemDrop != null)
-                        .ToDictionary(itemDrop => itemDrop, itemDrop => itemDrop.m_itemData);
-
-                    foreach (var gemItem in gemItemData)
+                    if (Jewelcrafting.API.GetGems(___m_dragItem).Any())
                     {
-                        bool recipeCheck = ObjectDB.instance.GetRecipe(gemItem.Value) && !Player.m_localPlayer.IsRecipeKnown(gemItem.Value.m_shared.m_name);
-                        bool knownMaterialCheck = !Player.m_localPlayer.m_knownMaterial.Contains(gemItem.Value.m_shared.m_name);
+                        var gemsOnItem = Jewelcrafting.API.GetGems(___m_dragItem);
 
-                        if (Recycle_N_ReclaimPlugin.returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off && (recipeCheck || knownMaterialCheck))
+                        Dictionary<ItemDrop, ItemDrop.ItemData> gemItemData = gemsOnItem
+                            .Where(gem => gem != null)
+                            .Select(gem => ObjectDB.instance.GetItemPrefab(gem.gemPrefab).GetComponent<ItemDrop>())
+                            .Where(itemDrop => itemDrop != null)
+                            .ToDictionary(itemDrop => itemDrop, itemDrop => itemDrop.m_itemData);
+
+                        foreach (var gemItem in gemItemData)
                         {
-                            Player.m_localPlayer.Message(MessageHud.MessageType.Center, "You don't know all the recipes for this item's materials.");
-                            return;
+                            bool recipeCheck = ObjectDB.instance.GetRecipe(gemItem.Value) && !Player.m_localPlayer.IsRecipeKnown(gemItem.Value.m_shared.m_name);
+                            bool knownMaterialCheck = !Player.m_localPlayer.m_knownMaterial.Contains(gemItem.Value.m_shared.m_name);
+
+                            if (Recycle_N_ReclaimPlugin.returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off && (recipeCheck || knownMaterialCheck))
+                            {
+                                Player.m_localPlayer.Message(MessageHud.MessageType.Center, "You don't know all the recipes for this item's materials.");
+                                return;
+                            }
+
+                            reqs.Add(new Piece.Requirement
+                            {
+                                m_amount = ObjectDB.instance.GetRecipe(gemItem.Value).m_amount,
+                                m_resItem = gemItem.Key
+                            });
                         }
-
-                        reqs.Add(new Piece.Requirement
-                        {
-                            m_amount = ObjectDB.instance.GetRecipe(gemItem.Value).m_amount,
-                            m_resItem = gemItem.Key
-                        });
                     }
                 }
 

@@ -128,7 +128,9 @@
         <Content Include="environment.props" />
         <Content Include="ILRepack.targets" />
         <Content Include="Libs\Jewelcrafting.dll" />
-        <Content Include="Libs\JewelcraftingAPI.dll" />
+        <Content Include="Libs\JewelcraftingAPI.dll">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
         <Content Include="Libs\ServerSync.dll">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
