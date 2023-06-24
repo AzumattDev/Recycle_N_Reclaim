@@ -71,6 +71,39 @@ public static class UpdateItemDragPatch
                     }
                 }
 
+                if (Jewelcrafting.API.IsLoaded())
+                {
+                    if (Jewelcrafting.API.GetGems(___m_dragItem).Any())
+                    {
+                        var gemsOnItem = Jewelcrafting.API.GetGems(___m_dragItem);
+
+                        Dictionary<ItemDrop, ItemDrop.ItemData> gemItemData = gemsOnItem
+                            .Where(gem => gem != null)
+                            .Select(gem => ObjectDB.instance.GetItemPrefab(gem.gemPrefab).GetComponent<ItemDrop>())
+                            .Where(itemDrop => itemDrop != null)
+                            .ToDictionary(itemDrop => itemDrop, itemDrop => itemDrop.m_itemData);
+
+                        foreach (var gemItem in gemItemData)
+                        {
+                            bool recipeCheck = ObjectDB.instance.GetRecipe(gemItem.Value) && !Player.m_localPlayer.IsRecipeKnown(gemItem.Value.m_shared.m_name);
+                            bool knownMaterialCheck = !Player.m_localPlayer.m_knownMaterial.Contains(gemItem.Value.m_shared.m_name);
+
+                            if (Recycle_N_ReclaimPlugin.returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off && (recipeCheck || knownMaterialCheck))
+                            {
+                                Player.m_localPlayer.Message(MessageHud.MessageType.Center, "You don't know all the recipes for this item's materials.");
+                                return;
+                            }
+
+                            reqs.Add(new Piece.Requirement
+                            {
+                                m_amount = ObjectDB.instance.GetRecipe(gemItem.Value).m_amount,
+                                m_resItem = gemItem.Key
+                            });
+                        }
+                    }
+                }
+
+
                 if (!cancel && ___m_dragAmount / recipe.m_amount > 0)
                     for (int i = 0; i < ___m_dragAmount / recipe.m_amount; i++)
                         foreach (Piece.Requirement req in reqs)

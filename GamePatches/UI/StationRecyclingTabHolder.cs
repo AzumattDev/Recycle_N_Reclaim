@@ -103,7 +103,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             m_recipeList.Clear();
 
             _recyclingAnalysisContexts.Clear();
-            var validRecycles = Recycler.GetRecyclingAnalysisForInventory(localPlayer.GetInventory(), localPlayer)
+            var validRecycles = Reclaimer.GetRecyclingAnalysisForInventory(localPlayer.GetInventory(), localPlayer)
                 .Where(context => context.Recipe != null
                                   // we want to reply on display impediments mainly,
                                   // but null recipes are really a deal breaker and
@@ -207,7 +207,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             {
                 var context = _recyclingAnalysisContexts[selectedRecipeIndex];
                 var newContext = new RecyclingAnalysisContext(context.Item);
-                Recycler.TryAnalyzeOneItem(newContext, player.GetInventory(), player);
+                Reclaimer.TryAnalyzeOneItem(newContext, player.GetInventory(), player);
                 _recyclingAnalysisContexts[selectedRecipeIndex] = newContext;
             }
         }
@@ -306,7 +306,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
                 igui.set_m_craftTimer(igui.get_m_craftTimer() + dt);
                 if (igui.get_m_craftTimer() >= (double)igui.m_craftDuration)
                 {
-                    Recycler.DoInventoryChanges(_recyclingAnalysisContexts[selectedRecipeIndex], player.GetInventory(), player);
+                    Reclaimer.DoInventoryChanges(_recyclingAnalysisContexts[selectedRecipeIndex], player.GetInventory(), player);
                     igui.set_m_craftTimer(-1f);
                     igui.SetRecipe(-1, false);
                     UpdateCraftingPanel();
@@ -345,7 +345,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         }
 
         public static void SetupRequirement(Transform elementRoot,
-            RecyclingAnalysisContext.RecyclingYieldEntry entry)
+            RecyclingAnalysisContext.ReclaimingYieldEntry entry)
         {
             var component1 = elementRoot.transform.Find("res_icon").GetComponent<Image>();
             var component2 = elementRoot.transform.Find("res_name").GetComponent<Text>();

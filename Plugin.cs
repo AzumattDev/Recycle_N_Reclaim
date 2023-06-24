@@ -19,6 +19,7 @@ using UnityEngine;
 namespace Recycle_N_Reclaim
 {
     [BepInPlugin(ModGUID, ModName, ModVersion)]
+    [BepInDependency("org.bepinex.plugins.jewelcrafting", BepInDependency.DependencyFlags.SoftDependency)]
     public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
     {
         internal const string ModName = "Recycle_N_Reclaim";
@@ -248,7 +249,7 @@ namespace Recycle_N_Reclaim
                 .GetValue(InventoryGui.instance);
             if (container == null) return;
             Recycle_N_ReclaimLogger.LogDebug($"Player {player.GetPlayerName()} triggered recycling");
-            Recycler.RecycleInventoryForAllRecipes(container.GetInventory(), player);
+            Reclaimer.RecycleInventoryForAllRecipes(container.GetInventory(), player);
         }
 
 
