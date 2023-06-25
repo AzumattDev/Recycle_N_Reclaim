@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Text;
 using HarmonyLib;
 
 namespace Recycle_N_Reclaim.GamePatches
@@ -114,7 +115,7 @@ namespace Recycle_N_Reclaim.GamePatches
             // ComputeHash - returns byte array  
             byte[] bytes = sha256Hash.ComputeHash(File.ReadAllBytes(Assembly.GetExecutingAssembly().Location));
             // Convert byte array to a string   
-            System.Text.StringBuilder builder = new();
+            StringBuilder builder = new();
             foreach (byte b in bytes)
             {
                 builder.Append(b.ToString("X2"));

@@ -15,7 +15,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         {
             Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder.SetInteractable(true);
             // temporary fix for compatibility with EpicLoot
-            __instance.UpdateCraftingPanel(false);
+            __instance.UpdateCraftingPanel();
         }
 
         [HarmonyPrefix]

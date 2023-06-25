@@ -6,7 +6,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
     public class ContainerRecyclingButtonHolder : MonoBehaviour
     {
         private Button _recycleAllButton = null!;
-        private bool _prefired = false;
+        private bool _prefired;
         private Text _textComponent = null!;
         private Image _imageComponent = null!;
 
@@ -58,7 +58,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
             var newLocalPosition = GetSavedButtonPosition();
             _recycleAllButton.transform.localPosition = newLocalPosition;
-            _recycleAllButton.onClick.RemoveAllListeners();
+            _recycleAllButton.onClick = new Button.ButtonClickedEvent();
             _recycleAllButton.onClick.AddListener(OnRecycleAllPressed);
             _textComponent = _recycleAllButton.GetComponentInChildren<Text>();
             _imageComponent = _recycleAllButton.GetComponentInChildren<Image>();

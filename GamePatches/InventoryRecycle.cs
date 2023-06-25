@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
-using ServerSync;
+using Jewelcrafting;
+using Recycle_N_Reclaim.YAMLStuff;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -108,7 +109,6 @@ public static class UpdateItemDragPatch
                 }
 
 
-
                 if (!cancel && ___m_dragAmount / recipe.m_amount > 0)
                     for (int i = 0; i < ___m_dragAmount / recipe.m_amount; i++)
                         foreach (Piece.Requirement req in reqs)
@@ -126,14 +126,17 @@ public static class UpdateItemDragPatch
                                     int stack = Mathf.Min(req.m_resItem.m_itemData.m_shared.m_maxStackSize, numToAdd);
                                     numToAdd -= stack;
 
-                                    if (Player.m_localPlayer.GetInventory().AddItem(prefab.name, stack, req.m_resItem.m_itemData.m_quality, req.m_resItem.m_itemData.m_variant, 0, "") == null)
+                                    if (!GroupUtils.IsPrefabExcludedInInventory(prefab.name))
                                     {
-                                        Transform transform1;
-                                        ItemDrop component = GameObject.Instantiate(prefab, (transform1 = Player.m_localPlayer.transform).position + transform1.forward + transform1.up, transform1.rotation).GetComponent<ItemDrop>();
-                                        component.m_itemData = newItem;
-                                        component.m_itemData.m_dropPrefab = prefab;
-                                        component.m_itemData.m_stack = stack;
-                                        component.Save();
+                                        if (Player.m_localPlayer.GetInventory().AddItem(prefab.name, stack, req.m_resItem.m_itemData.m_quality, req.m_resItem.m_itemData.m_variant, 0, "") == null)
+                                        {
+                                            Transform transform1;
+                                            ItemDrop component = GameObject.Instantiate(prefab, (transform1 = Player.m_localPlayer.transform).position + transform1.forward + transform1.up, transform1.rotation).GetComponent<ItemDrop>();
+                                            component.m_itemData = newItem;
+                                            component.m_itemData.m_dropPrefab = prefab;
+                                            component.m_itemData.m_stack = stack;
+                                            component.Save();
+                                        }
                                     }
                                 }
                             }
@@ -154,6 +157,6 @@ public static class UpdateItemDragPatch
 
         Object.Destroy(___m_dragGo);
         ___m_dragGo = null;
-        __instance.UpdateCraftingPanel(false);
+        __instance.UpdateCraftingPanel();
     }
 }
