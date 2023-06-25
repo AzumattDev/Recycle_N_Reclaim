@@ -54,10 +54,12 @@ public static class UpdateItemDragPatch
 
                     foreach (KeyValuePair<ItemDrop, int> kvp in magicReqs)
                     {
+                        var recipe2 = ObjectDB.instance.GetRecipe(kvp.Key.m_itemData);
+                        bool isRecipeKnown = recipe2 != null && Player.m_localPlayer.IsRecipeKnown(kvp.Key.m_itemData.m_shared.m_name);
+                        bool isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(kvp.Key.m_itemData.m_shared.m_name);
+
                         if (Recycle_N_ReclaimPlugin.returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off &&
-                            (ObjectDB.instance.GetRecipe(kvp.Key.m_itemData) &&
-                             !Player.m_localPlayer.IsRecipeKnown(kvp.Key.m_itemData.m_shared.m_name) ||
-                             !Player.m_localPlayer.m_knownMaterial.Contains(kvp.Key.m_itemData.m_shared.m_name)))
+                            (!isRecipeKnown || !isKnownMaterial))
                         {
                             Player.m_localPlayer.Message(MessageHud.MessageType.Center, "You don't know all the recipes for this item's materials.");
                             return;
@@ -65,11 +67,12 @@ public static class UpdateItemDragPatch
 
                         reqs.Add(new Piece.Requirement
                         {
-                            m_amount = kvp.Value,
+                            m_amount = recipe2 != null ? recipe2.m_amount : kvp.Value,
                             m_resItem = kvp.Key
                         });
                     }
                 }
+
 
                 if (Jewelcrafting.API.IsLoaded() && Recycle_N_ReclaimPlugin.returnEnchantedResources.Value == Recycle_N_ReclaimPlugin.Toggle.On)
                 {
@@ -85,10 +88,11 @@ public static class UpdateItemDragPatch
 
                         foreach (var gemItem in gemItemData)
                         {
-                            bool recipeCheck = ObjectDB.instance.GetRecipe(gemItem.Value) && !Player.m_localPlayer.IsRecipeKnown(gemItem.Value.m_shared.m_name);
-                            bool knownMaterialCheck = !Player.m_localPlayer.m_knownMaterial.Contains(gemItem.Value.m_shared.m_name);
+                            var recipe3 = ObjectDB.instance.GetRecipe(gemItem.Value);
+                            bool isRecipeKnown = recipe3 != null && Player.m_localPlayer.IsRecipeKnown(gemItem.Value.m_shared.m_name);
+                            bool isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(gemItem.Value.m_shared.m_name);
 
-                            if (Recycle_N_ReclaimPlugin.returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off && (recipeCheck || knownMaterialCheck))
+                            if (Recycle_N_ReclaimPlugin.returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off && (!isRecipeKnown || !isKnownMaterial))
                             {
                                 Player.m_localPlayer.Message(MessageHud.MessageType.Center, "You don't know all the recipes for this item's materials.");
                                 return;
@@ -96,12 +100,13 @@ public static class UpdateItemDragPatch
 
                             reqs.Add(new Piece.Requirement
                             {
-                                m_amount = ObjectDB.instance.GetRecipe(gemItem.Value).m_amount,
+                                m_amount = recipe3 != null ? recipe3.m_amount : gemItem.Value.m_stack,
                                 m_resItem = gemItem.Key
                             });
                         }
                     }
                 }
+
 
 
                 if (!cancel && ___m_dragAmount / recipe.m_amount > 0)

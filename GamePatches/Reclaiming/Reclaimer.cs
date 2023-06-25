@@ -261,20 +261,33 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
 
                 foreach (KeyValuePair<ItemDrop, int> kvp in magicReqs)
                 {
+                    var recipe2 = ObjectDB.instance.GetRecipe(kvp.Key.m_itemData);
+                    var isRecipeKnown = Player.m_localPlayer.IsRecipeKnown(kvp.Key.m_itemData.m_shared.m_name);
+                    var isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(kvp.Key.m_itemData.m_shared.m_name);
+
                     if (Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.Off &&
-                        (ObjectDB.instance.GetRecipe(kvp.Key.m_itemData) &&
-                         !Player.m_localPlayer.IsRecipeKnown(kvp.Key.m_itemData.m_shared.m_name) ||
-                         !Player.m_localPlayer.m_knownMaterial.Contains(kvp.Key.m_itemData.m_shared.m_name)))
+                        (recipe2 == null || isRecipeKnown == false || isKnownMaterial == false))
                     {
-                        analysisContext.RecyclingImpediments.Add($"Recipe for {Localization.instance.Localize(kvp.Key.m_itemData.m_shared.m_name)} not known.");
+                        var localizedItemName = Localization.instance?.Localize(kvp.Key.m_itemData.m_shared.m_name);
+                        analysisContext.RecyclingImpediments.Add($"Recipe for {localizedItemName ?? kvp.Key.m_itemData.m_shared.m_name} not known.");
                         return;
                     }
 
-                    var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(kvp.Key.gameObject, kvp.Key.m_itemData, ObjectDB.instance.GetRecipe(kvp.Key.m_itemData).m_amount,
-                        kvp.Key.m_itemData.m_quality, kvp.Key.m_itemData.m_variant, false);
-                    analysisContext.Entries.Add(yieldEntry);
+                    if (recipe2 != null)
+                    {
+                        var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(kvp.Key.gameObject, kvp.Key.m_itemData, recipe2.m_amount,
+                            kvp.Key.m_itemData.m_quality, kvp.Key.m_itemData.m_variant, false);
+                        analysisContext.Entries.Add(yieldEntry);
+                    }
+                    else if (kvp.Key) // Magic items that do not have a recipe
+                    {
+                        var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(kvp.Key.gameObject, kvp.Key.m_itemData, kvp.Key.m_itemData.m_stack,
+                            kvp.Key.m_itemData.m_quality, kvp.Key.m_itemData.m_variant, false);
+                        analysisContext.Entries.Add(yieldEntry);
+                    }
                 }
             }
+
 
             if (Jewelcrafting.API.IsLoaded() && Recycle_N_ReclaimPlugin.returnEnchantedResourcesReclaiming.Value == Recycle_N_ReclaimPlugin.Toggle.On)
             {

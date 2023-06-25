@@ -37,8 +37,7 @@ namespace Recycle_N_Reclaim
 
         public static readonly ManualLogSource Recycle_N_ReclaimLogger = BepInEx.Logging.Logger.CreateLogSource(ModName);
 
-        internal static readonly ConfigSync ConfigSyncVar = new(ModGUID)
-            { DisplayName = ModName, CurrentVersion = ModVersion, MinimumRequiredVersion = ModVersion };
+        internal static readonly ConfigSync ConfigSyncVar = new(ModGUID) { DisplayName = ModName, CurrentVersion = ModVersion, MinimumRequiredVersion = ModVersion };
 
         public enum Toggle
         {
