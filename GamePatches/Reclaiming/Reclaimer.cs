@@ -251,13 +251,13 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             bool isMagic = false;
             bool cancel = false;
             if (Recycle_N_ReclaimPlugin.epicLootAssembly != null && Recycle_N_ReclaimPlugin.returnEnchantedResourcesReclaiming.Value == Recycle_N_ReclaimPlugin.Toggle.On)
-                isMagic = (bool)UpdateItemDragPatch.isMagicMethod?.Invoke(null, new[] { itemData });
+                isMagic = (bool)UpdateItemDragPatch.isMagicMethod?.Invoke(null, new object[] { itemData })!;
 
             if (isMagic)
             {
-                int rarity = (int)UpdateItemDragPatch.getRarityMethod?.Invoke(null, new[] { itemData });
-                List<KeyValuePair<ItemDrop, int>> magicReqs =
-                    (List<KeyValuePair<ItemDrop, int>>)UpdateItemDragPatch.getEnchantCostsMethod?.Invoke(null, new object[] { itemData, rarity });
+                int rarity = (int)UpdateItemDragPatch.getRarityMethod?.Invoke(null, new object[] { itemData })!;
+                List<KeyValuePair<ItemDrop, int>>? magicReqs =
+                    (List<KeyValuePair<ItemDrop, int>>)UpdateItemDragPatch.getEnchantCostsMethod?.Invoke(null, new object[] { itemData, rarity })!;
 
                 foreach (KeyValuePair<ItemDrop, int> kvp in magicReqs)
                 {
@@ -270,11 +270,6 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                         return;
                     }
 
-                    /*recipe.m_resources.ToList().Add(new Piece.Requirement
-                    {
-                        m_amount = kvp.Value,
-                        m_resItem = kvp.Key
-                    });*/
                     var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(kvp.Key.gameObject, kvp.Key.m_itemData, ObjectDB.instance.GetRecipe(kvp.Key.m_itemData).m_amount,
                         kvp.Key.m_itemData.m_quality, kvp.Key.m_itemData.m_variant, false);
                     analysisContext.Entries.Add(yieldEntry);
@@ -289,33 +284,50 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
 
         private static void CheckJewelCrafting(RecyclingAnalysisContext recyclingAnalysisContext)
         {
+            if (recyclingAnalysisContext?.Item == null)
+                return;
+
             var itemData = recyclingAnalysisContext.Item;
             var gemsOnItem = Jewelcrafting.API.GetGems(itemData);
-            if (gemsOnItem.Any())
+
+
+            if (gemsOnItem != null && gemsOnItem.Any())
             {
                 Dictionary<ItemDrop, ItemDrop.ItemData> gemItemData = gemsOnItem
                     .Where(gem => gem != null)
-                    .Select(gem => ObjectDB.instance.GetItemPrefab(gem.gemPrefab).GetComponent<ItemDrop>())
+                    .Select(gem => ObjectDB.instance?.GetItemPrefab(gem.gemPrefab)?.GetComponent<ItemDrop>())
                     .Where(itemDrop => itemDrop != null)
                     .ToDictionary(itemDrop => itemDrop, itemDrop => itemDrop.m_itemData);
 
                 foreach (var gemItem in gemItemData)
                 {
-                    bool recipeCheck = ObjectDB.instance.GetRecipe(gemItem.Value) && !Player.m_localPlayer.IsRecipeKnown(gemItem.Value.m_shared.m_name);
-                    bool knownMaterialCheck = !Player.m_localPlayer.m_knownMaterial.Contains(gemItem.Value.m_shared.m_name);
+                    var recipe = ObjectDB.instance?.GetRecipe(gemItem.Value);
+                    var isRecipeKnown = Player.m_localPlayer?.IsRecipeKnown(gemItem.Value.m_shared.m_name);
+                    var isKnownMaterial = Player.m_localPlayer?.m_knownMaterial.Contains(gemItem.Value.m_shared.m_name);
 
-                    if (Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.Off && (recipeCheck || knownMaterialCheck))
+                    if (Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.Off && (recipe == null || isRecipeKnown == false || isKnownMaterial == false))
                     {
-                        recyclingAnalysisContext.RecyclingImpediments.Add($"Recipe for {Localization.instance.Localize(gemItem.Value.m_shared.m_name)} not known.");
+                        var localizedGemName = Localization.instance?.Localize(gemItem.Value.m_shared.m_name);
+                        recyclingAnalysisContext.RecyclingImpediments.Add($"Recipe for {localizedGemName ?? gemItem.Value.m_shared.m_name} not known.");
                         return;
                     }
 
-                    var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(gemItem.Key.gameObject, gemItem.Value, ObjectDB.instance.GetRecipe(gemItem.Value).m_amount,
-                        gemItem.Value.m_quality, gemItem.Value.m_variant, false);
-                    recyclingAnalysisContext.Entries.Add(yieldEntry);
+                    if (recipe != null)
+                    {
+                        var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(gemItem.Key.gameObject, gemItem.Value, recipe.m_amount,
+                            gemItem.Value.m_quality, gemItem.Value.m_variant, false);
+                        recyclingAnalysisContext.Entries.Add(yieldEntry);
+                    }
+                    else if (gemItem.Key) // Merged gems do not have a recipe
+                    {
+                        var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(gemItem.Key.gameObject, gemItem.Value, 1,
+                            gemItem.Value.m_quality, gemItem.Value.m_variant, false);
+                        recyclingAnalysisContext.Entries.Add(yieldEntry);
+                    }
                 }
             }
         }
+
 
         private static Result CalculateFinalAmount(ItemDrop.ItemData itemData, Piece.Requirement resource,
             double amountToCraftedRecipeAmountPercentage, float recyclingRate)
