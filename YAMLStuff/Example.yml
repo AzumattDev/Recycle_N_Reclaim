@@ -1,12 +1,13 @@
 # Below you can find example groups. Groups are used to exclude or includeOverride quickly. They are reusable lists! 
-# Please note that some of these groups/container limitations are kinda pointless but are here for example.
+# Please note that some of these groups & limitations are kinda pointless but are here for example.
 # Make sure to follow the format of the example below. If you have any questions, please ask in my discord.
 
 # Full vanilla prefab name list: https://valheim-modding.github.io/Jotunn/data/prefabs/prefab-list.html
 # Item prefab name list: https://valheim-modding.github.io/Jotunn/data/objects/item-list.html
 
 # There are several predefined groups set up for you that are not listed. You can use these just like you would any group you create yourself.
-# These are the "All", "Food", "Potion", "Fish", "Swords", "Bows", "Crossbows", "Axes", "Clubs", "Knives", "Pickaxes", "Polearms", "Spears", "Equipment", "Boss Trophy", "Trophy", "Crops", "Seeds", "Ores", "Metals", and "Woods" groups.
+# These are the "All", "Food", "Potion", "Fish", "Swords", "Bows", "Crossbows", "Axes", "Clubs", "Knives", "Pickaxes", "Polearms", "Spears", "Equipment", 
+#  "Boss Trophy", "Trophy", "Crops", "Seeds", "Ores", "Metals", "Woods", "Armor", "Helmets", "Ammunition", "Utilities", "Tools", "Miscellaneous", and "Customizations" groups.
 # The criteria for these groups are as follows:
 # groups:
 #   Food:
@@ -39,7 +40,7 @@
 #     - Criteria: sharedData.m_name ends with any of the following boss names:
 #         - eikthyr, elder, bonemass, dragonqueen, goblinking, SeekerQueen
 #   Trophy:
-#     - itemType: Trophie
+#     - itemType: Trophy
 #     - Criteria: sharedData.m_name does not end with any boss names
 #   Crops:
 #     - itemType: Material
@@ -60,6 +61,20 @@
 #   Woods:
 #     - itemType: Material
 #     - Criteria: Can be processed by the charcoal_kiln smelter
+#   Armor:
+#     - itemType: Chest, Shoulder, Legs, Hands
+#   Helmets:
+#     - itemType: Helmet
+#   Ammunition:
+#     - itemType: Ammo, AmmoNonEquipable
+#   Utilities:
+#     - itemType: Utility
+#   Tools:
+#     - itemType: Tool
+#   Miscellaneous:
+#     - itemType: Misc
+#   Customizations:
+#     - itemType: Customization
 #   All:
 #     - Criteria: Item has an ItemDrop script and all needed fields are populated. (all items)
 
@@ -67,106 +82,73 @@
 
 
 groups:
-  Armor: # Group name
-    - ArmorBronzeChest # Item prefab name, note that this is case sensitive and must be the prefab name
-    - ArmorBronzeLegs
-    - ArmorCarapaceChest
-    - ArmorCarapaceLegs
-    - ArmorFenringChest
-    - ArmorFenringLegs
-    - ArmorIronChest
-    - ArmorIronLegs
-    - ArmorLeatherChest
-    - ArmorLeatherLegs
-    - ArmorMageChest
-    - ArmorMageLegs
-    - ArmorPaddedCuirass
-    - ArmorPaddedGreaves
-    - ArmorRagsChest
-    - ArmorRagsLegs
-    - ArmorRootChest
-    - ArmorRootLegs
-    - ArmorTrollLeatherChest
-    - ArmorTrollLeatherLegs
-    - ArmorWolfChest
-    - ArmorWolfLegs
-  Arrows:
-    - ArrowBronze
-    - ArrowCarapace
-    - ArrowFire
-    - ArrowFlint
-    - ArrowFrost
-    - ArrowIron
-    - ArrowNeedle
-    - ArrowObsidian
-    - ArrowPoison
-    - ArrowSilver
-    - ArrowWood
-    - draugr_arrow
-  Tier 2 Items:
-    - Bronze
+  Example Group: # Group name
+    - APrefabName # Item prefab name, note that this is case sensitive and must be the prefab name
+  Another Custom Group: # Group name
+    - APrefabName # Item prefab name, note that this is case sensitive and must be the prefab name
+    - AnotherPrefabName
+    - YetAnotherPrefabName
+  Tier 2 Items: # Group name
+    - Bronze # Item prefab name, note that this is case sensitive and must be the prefab name
     - PickaxeBronze
     - ArmorBronzeChest
-    - ArmorBrozeLeggings
+    - ArmorBronzeLeggings
 
 
-# By default, if you don't specify a container below, it will be considered as you want to allow pulling all objects for pulling from it.
-# If you are having issues with a container, please make sure you have the full prefab name of the container. Additionally, make sure you have exclude or includeOverride set up correctly.
-# Worst case you can define a container like this. This will allow everything to be pulled from the container.
-# rk_barrel:  
-#  includeOverride: []
-
-## Please note that the below containers are just examples. You can add as many containers as you want.
-## If you want to add a new container, just copy and paste the below example and change the name of the container to the prefab name of the container you want to add.
-## The values are set up to include everything by using the includeOverride (aside from things that aren't really a part of vanilla recipes, like Swords or Bows). 
-## This is to give you examples on how it's done, but still allow everything to be pulled from the container.
-
+# Inventory section determines which items can be recycled. Remember that recycling from inventory is defaulted to only admins.
 inventory:
-  exclude:
-    - Food
+  exclude: # Exclude these items from being recycled
+    - Metals # Exclude all items in the "Metals" group from being recycled in inventory
   includeOverride:
-    - Raspberry
+    - Metals # Override the setting above, allowing "Metals" group to be recycled in inventory
 
+# Reclaiming section determines which items can be reclaimed via Containers or the Reclaim tab.
 reclaiming:
   exclude:
-    - Food
+    - Metals # Exclude all items in the "Metals" group from being reclaimed
+    - Armor # Exclude all items in the "Armor" group from being reclaimed
+    - Helmets # Exclude all items in the "Helmets" group from being reclaimed
+    - Hammer # Exclude this specific item from being reclaimed
   includeOverride:
-    - Raspberry
+    - All # Allow all items to be reclaimed, overrides the exclude rules above for "reclaiming" section
 
-
-
+# Containers section determines the rules for specific containers. It follows the limitations of the "reclaiming" section to determine what is actually reclaimed.
+# This section is primarily used for managing the items included or excluded from the "Reclaim All" functionality of containers, allowing you to prevent certain items 
+# from being a part of the reclaim logic.
 containers:
-  piece_chest:
-    exclude: # Exclude these items from being able to be pulled from the container
-      #- Food # Exclude all in group
-      - PickaxeBronze # Allow prefab names as well, in this case we will use something that isn't a food
+  piece_chest: # Container prefab name, note that this is case sensitive and must be the prefab name
+    exclude:
+      - Food # Exclude or "skip" all items in the "Food" group from this container. Food will not be deconstructed back into its ingredients.
+      - PickaxeBronze #  Exclude or "skip" this specific item from this container. Excluding it from being reclaimed will prevent it from being deconstructed back into its ingredients.
     includeOverride:
-      # - Food # This would not work, you cannot includeOverride a group that is excluded. You can only override prefabs from that group.
-      - PickaxeBronze # You can however, be weird, and override a prefab name you have excluded.
-  
-  # It's highly unlikely that you will need the armor, swords, bows, etc. groups below. These are just in case you want to use them. 
-  # They were also easy ways for me to show you how to use the groups without actually excluding something you might want to always pull by default.
-  
+      - Foods # Override
+      - PickaxeBronze # Allow this specific item to be included in the reclaiming process. Overrides the exclude rules above.
+      - All # Just here for cleaning up the example, allowing default behavior
+
   piece_chest_wood:
     exclude:
-      - Swords # Exclude all in group
-      - Tier 2 Items # Exclude all in group
-      - Bows # Exclude all in group
-    includeOverride: # If the item is in the groups above, say, you were using a predefined group but want to override just one item to be ignored and allow pulling it
-      - BowFineWood
-      - Wood
-      - Bronze
-  
+      - Swords # Exclude all items in the "Swords" group from this container
+      - Tier 2 Items # Exclude all items in the "Tier 2 Items" group from this container
+      - Bows # Exclude all items in the "Bows" group from this container
+    includeOverride:
+      - BowFineWood # Allow this specific item to be included in this container
+      - Wood # Allow this specific item to be included in this container
+      - Bronze # Allow this specific item to be included in this container
+      - All # Just here for cleaning up the example, allowing default behavior
+
   piece_chest_private:
     exclude:
-      - All # Exclude everything
-  
+      - All # Exclude all items from this container
+    includeOverride:
+      - All # Just here for cleaning up the example, allowing default behavior
+
   piece_chest_blackmetal:
     exclude:
-      - Swords # Exclude all in group
-      - Tier 2 Items # Exclude all in group
-      - Bows # Exclude all in group
-    includeOverride: # If the item is in the groups above, say, you were using a predefined group but want to override just one item to be ignored and allow pulling it
-      - BowFineWood
-      - Wood
+      - Swords # Exclude all items in the "Swords" group from this container
+      - Tier 2 Items # Exclude all items in the "Tier 2 Items" group from this container
+      - Bows # Exclude all items in the "Bows" group from this container
+    includeOverride:
+      - BowFineWood # Allow this specific item to be included in this container
+      - Wood 
       - Bronze
+      - All # Just here for cleaning up the example, allowing default behavior

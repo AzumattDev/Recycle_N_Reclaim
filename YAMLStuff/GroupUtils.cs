@@ -7,6 +7,7 @@ using UnityEngine;
 namespace Recycle_N_Reclaim.YAMLStuff;
 
 [HarmonyPatch(typeof(ObjectDB), nameof(ObjectDB.Awake))]
+[HarmonyPriority(Priority.Last)]
 static class PredefinedGroupGrab
 {
     static void Postfix(ObjectDB __instance)
@@ -203,6 +204,27 @@ public class GroupUtils
                         }
 
                         break;
+                    case ItemDrop.ItemData.ItemType.Helmet:
+                        groupName = "Helmets";
+                        break;
+                    case ItemDrop.ItemData.ItemType.Chest or ItemDrop.ItemData.ItemType.Shoulder or ItemDrop.ItemData.ItemType.Legs or ItemDrop.ItemData.ItemType.Hands:
+                        groupName = "Armor";
+                        break;
+                    case ItemDrop.ItemData.ItemType.Ammo or ItemDrop.ItemData.ItemType.AmmoNonEquipable:
+                        groupName = "Ammunition";
+                        break;
+                    case ItemDrop.ItemData.ItemType.Utility:
+                        groupName = "Utilities";
+                        break;
+                    case ItemDrop.ItemData.ItemType.Tool:
+                        groupName = "Tools";
+                        break;
+                    case ItemDrop.ItemData.ItemType.Misc:
+                        groupName = "Miscellaneous";
+                        break;
+                    case ItemDrop.ItemData.ItemType.Customization:
+                        groupName = "Customizations";
+                        break;
                 }
 
                 if (!string.IsNullOrEmpty(groupName))
@@ -219,20 +241,30 @@ public class GroupUtils
         }
     }
 
+
     private static void AddItemToGroup(string groupName, ItemDrop itemDrop)
     {
         // Check if the group exists, and if not, create it
         if (!GroupExists(groupName))
         {
             Recycle_N_ReclaimPlugin.yamlData.Groups[groupName] = new List<string>();
+
+            // Also add it to predefined groups
+            Recycle_N_ReclaimPlugin.predefinedGroups[groupName] = new HashSet<string>();
         }
 
         // Add the item to the group
         string prefabName = Utils.GetPrefabName(itemDrop.m_itemData.m_dropPrefab);
         if (Recycle_N_ReclaimPlugin.yamlData.Groups[groupName].Contains(prefabName)) return;
         Recycle_N_ReclaimPlugin.yamlData.Groups[groupName].Add(prefabName);
+
+        // Add the item to the predefined group as well
+        Recycle_N_ReclaimPlugin.predefinedGroups[groupName].Add(prefabName);
+#if DEBUG
         Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"(CreatePredefinedGroups) Added {prefabName} to {groupName}");
+#endif
     }
+
 
     public static bool IsPrefabExcludedInReclaiming(string prefabName)
     {
@@ -257,132 +289,70 @@ public class GroupUtils
 
     private static bool IsPrefabExcludedInEntity(object entity, string prefabName)
     {
-        if (entity is tainer container)
+        if (entity is not (excludeContainer or Reclaiming or Inventory))
         {
-            if (container.IncludeOverride != null)
-            {
-                // Check if the prefab is in the included items or groups, if includeOverride is true
-                foreach (var item in container.IncludeOverride)
-                {
-                    // Direct match
-                    if (item == prefabName)
-                    {
-                        return false; // It's included, so it can't be excluded
-                    }
+            throw new ArgumentException("The entity type is not supported.");
+        }
 
-                    // Check if it's a group
-                    if (Recycle_N_ReclaimPlugin.yamlData.Groups.TryGetValue(item, out var group))
+        List<string>? includeOverride = null;
+        List<string>? exclude = null;
+        switch (entity)
+        {
+            case excludeContainer container:
+                includeOverride = container.IncludeOverride;
+                exclude = container.Exclude;
+                break;
+            case Reclaiming reclaiming:
+                includeOverride = reclaiming.IncludeOverride;
+                exclude = reclaiming.Exclude;
+                break;
+            case Inventory inventory:
+                exclude = inventory.Exclude;
+                includeOverride = inventory.IncludeOverride;
+                break;
+        }
+
+        // Check if the prefab is in the included items or groups, if includeOverride is not null
+        if (includeOverride != null)
+        {
+            foreach (var item in includeOverride)
+            {
+                // Direct match
+                if (item == prefabName)
+                {
+                    return false; // It's included, so it can't be excluded
+                }
+
+                // Check if it's a group
+                if (Recycle_N_ReclaimPlugin.yamlData.Groups.TryGetValue(item, out var group))
+                {
+                    if (group.Contains(prefabName))
                     {
-                        if (group.Contains(prefabName))
-                        {
-                            return false; // It's included in a group, so it can't be excluded
-                        }
+                        return false; // It's included in a group, so it can't be excluded
                     }
                 }
-            }
-
-            if (container.Exclude != null)
-            {
-                // Check if the prefab is in the excluded items list of the container
-                foreach (var item in container.Exclude)
-                {
-                    // Direct match
-                    if (item == prefabName)
-                    {
-                        return true;
-                    }
-
-                    // Check if it's a group
-                    if (Recycle_N_ReclaimPlugin.yamlData.Groups.TryGetValue(item, out var group))
-                    {
-                        if (group.Contains(prefabName))
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                throw new ArgumentException("The exclude field is required for a container that has been defined.");
             }
         }
-        else if (entity is Reclaiming reclaiming)
+
+        // Check if the prefab is in the excluded items or groups
+        if (exclude != null)
         {
-            if (reclaiming.IncludeOverride != null)
+            foreach (var item in exclude)
             {
-                // Check if the prefab is in the included items or groups, if includeOverride is true
-                foreach (var item in reclaiming.IncludeOverride)
+                // Direct match
+                if (item == prefabName)
                 {
-                    // Direct match
-                    if (item == prefabName)
-                    {
-                        return false; // It's included, so it can't be excluded
-                    }
+                    return true;
+                }
 
-                    // Check if it's a group
-                    if (Recycle_N_ReclaimPlugin.yamlData.Groups.TryGetValue(item, out var group))
+                // Check if it's a group
+                if (Recycle_N_ReclaimPlugin.yamlData.Groups.TryGetValue(item, out var group))
+                {
+                    if (group.Contains(prefabName))
                     {
-                        if (group.Contains(prefabName))
-                        {
-                            return false; // It's included in a group, so it can't be excluded
-                        }
+                        return true; // It's included in a group, so it's excluded
                     }
                 }
-            }
-
-            if (reclaiming.Exclude != null)
-            {
-                // Check if the prefab is in the excluded items list of reclaiming
-                foreach (var item in reclaiming.Exclude)
-                {
-                    // Direct match
-                    if (item == prefabName)
-                    {
-                        return true;
-                    }
-
-                    // Check if it's a group
-                    if (Recycle_N_ReclaimPlugin.yamlData.Groups.TryGetValue(item, out var group))
-                    {
-                        if (group.Contains(prefabName))
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                throw new ArgumentException("The exclude field is required for reclaiming.");
-            }
-        }
-        else if (entity is Inventory inventory)
-        {
-            if (inventory.Exclude != null)
-            {
-                // Check if the prefab is in the excluded items list of the inventory
-                foreach (var item in inventory.Exclude)
-                {
-                    // Direct match
-                    if (item == prefabName)
-                    {
-                        return true;
-                    }
-
-                    // Check if it's a group
-                    if (Recycle_N_ReclaimPlugin.yamlData.Groups.TryGetValue(item, out var group))
-                    {
-                        if (group.Contains(prefabName))
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                throw new ArgumentException("The exclude field is required for inventory.");
             }
         }
 

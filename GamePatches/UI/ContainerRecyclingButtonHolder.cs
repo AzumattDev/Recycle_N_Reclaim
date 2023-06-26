@@ -84,7 +84,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             else
             {
                 _prefired = false;
-                _textComponent.text = "Recycle all";
+                _textComponent.text = "Reclaim all";
                 _imageComponent.color = new Color(0.5f, 1f, 0.5f);
             }
         }

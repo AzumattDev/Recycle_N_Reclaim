@@ -126,7 +126,7 @@ public static class UpdateItemDragPatch
                                     int stack = Mathf.Min(req.m_resItem.m_itemData.m_shared.m_maxStackSize, numToAdd);
                                     numToAdd -= stack;
 
-                                    if (!GroupUtils.IsPrefabExcludedInInventory(prefab.name))
+                                    if (!GroupUtils.IsPrefabExcludedInInventory(Utils.GetPrefabName(prefab)))
                                     {
                                         if (Player.m_localPlayer.GetInventory().AddItem(prefab.name, stack, req.m_resItem.m_itemData.m_quality, req.m_resItem.m_itemData.m_variant, 0, "") == null)
                                         {

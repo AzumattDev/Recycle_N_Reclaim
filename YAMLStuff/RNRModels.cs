@@ -9,7 +9,7 @@ public class Root
     public Dictionary<string, List<string>> Groups { get; set; }
 
     [YamlMember(Alias = "containers")]
-    public Dictionary<string, tainer> Containers { get; set; }
+    public Dictionary<string, excludeContainer> Containers { get; set; }
 
     [YamlMember(Alias = "reclaiming")]
     public Reclaiming Reclaiming { get; set; }  // Removed static
@@ -18,7 +18,7 @@ public class Root
     public Inventory Inventory { get; set; }  // Removed static
 }
 
-public class tainer
+public class excludeContainer
 {
     [YamlMember(Alias = "exclude")]
     public List<string> Exclude { get; set; }

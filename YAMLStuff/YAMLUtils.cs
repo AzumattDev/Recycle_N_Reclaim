@@ -31,6 +31,12 @@ public class YAMLUtils
         Recycle_N_ReclaimPlugin.yamlData = deserializer.Deserialize<Root>(yamlInput);
         // log the yaml data
         Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"yamlData:\n{yamlInput}");
+        // Iterate over each group in predefinedGroups
+        foreach (KeyValuePair<string, HashSet<string>> group in Recycle_N_ReclaimPlugin.predefinedGroups)
+        {
+            // Add each predefined group to the yamlData
+            Recycle_N_ReclaimPlugin.yamlData.Groups[group.Key] = group.Value.ToList();
+        }
     }
 
     internal static void ParseGroups()
