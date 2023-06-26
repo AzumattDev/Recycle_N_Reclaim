@@ -62,7 +62,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             _recyclingTabButtonComponent.interactable = false;
             InventoryGui.instance.m_tabCraft.interactable = true;
             InventoryGui.instance.m_tabUpgrade.interactable = true;
-            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"OnRecycleClick");
+            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug("OnRecycleClick");
             UpdateCraftingPanel();
         }
 
@@ -86,7 +86,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
             if (igui.get_m_availableRecipes().Count > 0)
             {
-                igui.SetRecipe(igui.get_m_selectedRecipe().Key != null ? igui.GetSelectedRecipeIndex(false) : 0, true);
+                igui.SetRecipe(igui.get_m_selectedRecipe().Key != null ? igui.GetSelectedRecipeIndex() : 0, true);
             }
             else
                 igui.SetRecipe(-1, true);
@@ -184,7 +184,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         public void UpdateRecipe(Player player, float dt)
         {
             var igui = InventoryGui.instance;
-            var selectedRecipeIndex = igui.GetSelectedRecipeIndex(false);
+            var selectedRecipeIndex = igui.GetSelectedRecipeIndex();
 
             UpdateRecyclingAnalysisContexts(selectedRecipeIndex, player);
             UpdateCraftingStationUI(player);
@@ -252,7 +252,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             if (analysisContext.RecyclingImpediments.Count == 0)
                 igui.m_recipeDecription.text = "\nAll requirements are <color=orange>fulfilled</color>";
             else
-                igui.m_recipeDecription.text = "\nRecycling blocked for these reasons:\n\n<size=15>" + $"{string.Join("\n", analysisContext.RecyclingImpediments)}" + $"</size>";
+                igui.m_recipeDecription.text = "\nRecycling blocked for these reasons:\n\n<size=15>" + $"{string.Join("\n", analysisContext.RecyclingImpediments)}" + "</size>";
 
             if (itemData != null)
             {
@@ -347,7 +347,6 @@ namespace Recycle_N_Reclaim.GamePatches.UI
                 else
                 {
                     InventoryGui.HideRequirement(elementTransform);
-                    continue;
                 }
             }
         }
@@ -378,7 +377,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
             int num = 0;
             if (filteredEntries.Count > 4)
-                num = (int)Time.fixedTime % (int)Mathf.Ceil((float)filteredEntries.Count / (float)igui.m_recipeRequirementList.Length) * igui.m_recipeRequirementList.Length;
+                num = (int)Time.fixedTime % (int)Mathf.Ceil(filteredEntries.Count / (float)igui.m_recipeRequirementList.Length) * igui.m_recipeRequirementList.Length;
 
             for (int index2 = num; index2 < filteredEntries.Count; ++index2)
             {

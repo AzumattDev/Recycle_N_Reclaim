@@ -13,6 +13,7 @@ using HarmonyLib;
 using JetBrains.Annotations;
 using Recycle_N_Reclaim.GamePatches.Recycling;
 using Recycle_N_Reclaim.GamePatches.UI;
+using Recycle_N_Reclaim.YAMLStuff;
 using ServerSync;
 using UnityEngine;
 
@@ -23,12 +24,12 @@ namespace Recycle_N_Reclaim
     public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
     {
         internal const string ModName = "Recycle_N_Reclaim";
-        internal const string ModVersion = "1.1.0";
+        internal const string ModVersion = "1.1.1";
         internal const string Author = "Azumatt";
         private const string ModGUID = Author + "." + ModName;
         private static string ConfigFileName = ModGUID + ".cfg";
         private static string ConfigFileFullPath = Paths.ConfigPath + Path.DirectorySeparatorChar + ConfigFileName;
-        internal static Assembly epicLootAssembly = null;
+        internal static Assembly epicLootAssembly;
         internal static string ConnectionError = "";
         public static StationRecyclingTabHolder RecyclingTabButtonHolder { get; private set; }
         private ContainerRecyclingButtonHolder _containerRecyclingButton;
@@ -38,6 +39,14 @@ namespace Recycle_N_Reclaim
         public static readonly ManualLogSource Recycle_N_ReclaimLogger = BepInEx.Logging.Logger.CreateLogSource(ModName);
 
         internal static readonly ConfigSync ConfigSyncVar = new(ModGUID) { DisplayName = ModName, CurrentVersion = ModVersion, MinimumRequiredVersion = ModVersion };
+
+        internal static readonly string yamlFileName = $"{Author}.{ModName}_ExcludeLists.yml";
+        internal static readonly string yamlPath = Paths.ConfigPath + Path.DirectorySeparatorChar + yamlFileName;
+        internal static readonly CustomSyncedValue<string> RNRExcludeListData = new(ConfigSyncVar, "RNR_YamlData", "");
+
+        //
+        internal static Root yamlData = new Root();
+        internal static Dictionary<string, HashSet<string>> predefinedGroups = new();
 
         public enum Toggle
         {
@@ -159,6 +168,14 @@ namespace Recycle_N_Reclaim
                 "If enabled, will spam recycling checks to the console.\n" +
                 "VERY. VERY. SPAMMY. Influences performance. ");
 
+            if (!File.Exists(yamlPath))
+            {
+                YAMLUtils.WriteConfigFileFromResource(yamlPath);
+            }
+            
+            RNRExcludeListData.ValueChanged += OnValChangedUpdate; // check for file changes
+            RNRExcludeListData.AssignLocalValue(File.ReadAllText(yamlPath));
+
 
             Assembly assembly = Assembly.GetExecutingAssembly();
             _harmony.PatchAll(assembly);
@@ -221,6 +238,14 @@ namespace Recycle_N_Reclaim
             watcher.IncludeSubdirectories = true;
             watcher.SynchronizingObject = ThreadingHelper.SynchronizingObject;
             watcher.EnableRaisingEvents = true;
+
+            FileSystemWatcher yamlwatcher = new(Paths.ConfigPath, yamlFileName);
+            yamlwatcher.Changed += ReadYamlFiles;
+            yamlwatcher.Created += ReadYamlFiles;
+            yamlwatcher.Renamed += ReadYamlFiles;
+            yamlwatcher.IncludeSubdirectories = true;
+            yamlwatcher.SynchronizingObject = ThreadingHelper.SynchronizingObject;
+            yamlwatcher.EnableRaisingEvents = true;
         }
 
         private void ReadConfigValues(object sender, FileSystemEventArgs e)
@@ -238,6 +263,35 @@ namespace Recycle_N_Reclaim
             }
         }
 
+        private void ReadYamlFiles(object sender, FileSystemEventArgs e)
+        {
+            if (!File.Exists(yamlPath)) return;
+            try
+            {
+                Recycle_N_ReclaimLogger.LogDebug("ReadConfigValues called");
+                RNRExcludeListData.AssignLocalValue(File.ReadAllText(yamlPath));
+            }
+            catch
+            {
+                Recycle_N_ReclaimLogger.LogError($"There was an issue loading your {yamlFileName}");
+                Recycle_N_ReclaimLogger.LogError("Please check your entries for spelling and format!");
+            }
+        }
+        
+        private static void OnValChangedUpdate()
+        {
+            Recycle_N_ReclaimLogger.LogDebug("OnValChanged called");
+            try
+            {
+                YAMLUtils.ReadYaml(RNRExcludeListData.Value);
+                //YAMLUtils.ParseGroups();
+            }
+            catch (Exception e)
+            {
+                Recycle_N_ReclaimLogger.LogError($"Failed to deserialize {yamlFileName}: {e}");
+            }
+        }
+
         public static string Localize(string text)
         {
             return Localization.instance.Localize(text);
@@ -250,7 +304,7 @@ namespace Recycle_N_Reclaim
                 .GetValue(InventoryGui.instance);
             if (container == null) return;
             Recycle_N_ReclaimLogger.LogDebug($"Player {player.GetPlayerName()} triggered recycling");
-            Reclaimer.RecycleInventoryForAllRecipes(container.GetInventory(), player);
+            Reclaimer.RecycleInventoryForAllRecipes(container.GetInventory(), GroupUtils.GetPrefabName(container.transform.name), player);
         }
 
 

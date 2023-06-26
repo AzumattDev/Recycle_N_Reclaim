@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Jewelcrafting;
+using Recycle_N_Reclaim.YAMLStuff;
 
 namespace Recycle_N_Reclaim.GamePatches.Recycling
 {
     public static class Reclaimer
     {
-        public static void RecycleInventoryForAllRecipes(Inventory inventory, Player player)
+        public static void RecycleInventoryForAllRecipes(Inventory inventory, string containerName, Player player)
         {
             var itemListSnapshot = new List<ItemDrop.ItemData>();
             // copy the inventory, otherwise collection will constantly change causing issues
@@ -18,7 +20,13 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 var item = itemListSnapshot[index];
                 var analysisContext = new RecyclingAnalysisContext(item);
                 analysisList.Add(analysisContext);
-                RecycleOneItemInInventory(analysisContext, inventory, player);
+                // log the container name and prefab name
+                Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"containerName: {containerName}, prefabName: {Utils.GetPrefabName(item.m_dropPrefab)}");
+                if (!GroupUtils.IsPrefabExcludedInContainer(containerName, Utils.GetPrefabName(item.m_dropPrefab)))
+                {
+                    RecycleOneItemInInventory(analysisContext, inventory, player);
+                }
+
                 if (analysisContext.ShouldErrorDumpAnalysis || Recycle_N_ReclaimPlugin.DebugAlwaysDumpAnalysisContext.Value == Recycle_N_ReclaimPlugin.Toggle.On)
                 {
                     analysisContext.Dump();
@@ -64,7 +72,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             DoInventoryChanges(analysisContext, inventory, player);
         }
 
-        public static bool TryAnalyzeOneItem(RecyclingAnalysisContext analysisContext, Inventory inventory, Player player)
+        public static bool TryAnalyzeOneItem(RecyclingAnalysisContext analysisContext, Inventory inventory, Player player, bool fromContainer = false)
         {
             if (!TryFindRecipeForItem(analysisContext, player)) return false;
             AnalyzeCraftingStationRequirements(analysisContext, player);
@@ -113,7 +121,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
 
         public static void DoInventoryChanges(RecyclingAnalysisContext analysisContext, Inventory inventory, Player player)
         {
-            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"Inventory changes requested");
+            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug("Inventory changes requested");
             foreach (var entry in analysisContext.Entries)
             {
                 if (entry is { Amount: 0, InitialRecipeHadZero: true }) continue;
@@ -240,7 +248,10 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 var (finalAmount, initialRecipeHadZero) = CalculateFinalAmount(itemData, resource, amountToCraftedRecipeAmountPercentage,
                     recyclingRate);
 
-                analysisContext.Entries.Add(new RecyclingAnalysisContext.ReclaimingYieldEntry(preFab, rItemData, finalAmount, rItemData.m_quality, rItemData.m_variant, initialRecipeHadZero));
+                if (!GroupUtils.IsPrefabExcludedInReclaiming(Utils.GetPrefabName(preFab)))
+                {
+                    analysisContext.Entries.Add(new RecyclingAnalysisContext.ReclaimingYieldEntry(preFab, rItemData, finalAmount, rItemData.m_quality, rItemData.m_variant, initialRecipeHadZero));
+                }
 
                 if (Recycle_N_ReclaimPlugin.PreventZeroResourceYields.Value == Recycle_N_ReclaimPlugin.Toggle.On && finalAmount == 0 && !initialRecipeHadZero)
                 {
@@ -273,17 +284,20 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                         return;
                     }
 
-                    if (recipe2 != null)
+                    if (!GroupUtils.IsPrefabExcludedInReclaiming(Utils.GetPrefabName(kvp.Key.gameObject)))
                     {
-                        var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(kvp.Key.gameObject, kvp.Key.m_itemData, recipe2.m_amount,
-                            kvp.Key.m_itemData.m_quality, kvp.Key.m_itemData.m_variant, false);
-                        analysisContext.Entries.Add(yieldEntry);
-                    }
-                    else if (kvp.Key) // Magic items that do not have a recipe
-                    {
-                        var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(kvp.Key.gameObject, kvp.Key.m_itemData, kvp.Key.m_itemData.m_stack,
-                            kvp.Key.m_itemData.m_quality, kvp.Key.m_itemData.m_variant, false);
-                        analysisContext.Entries.Add(yieldEntry);
+                        if (recipe2 != null)
+                        {
+                            var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(kvp.Key.gameObject, kvp.Key.m_itemData, recipe2.m_amount,
+                                kvp.Key.m_itemData.m_quality, kvp.Key.m_itemData.m_variant, false);
+                            analysisContext.Entries.Add(yieldEntry);
+                        }
+                        else if (kvp.Key) // Magic items that do not have a recipe
+                        {
+                            var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(kvp.Key.gameObject, kvp.Key.m_itemData, kvp.Key.m_itemData.m_stack,
+                                kvp.Key.m_itemData.m_quality, kvp.Key.m_itemData.m_variant, false);
+                            analysisContext.Entries.Add(yieldEntry);
+                        }
                     }
                 }
             }
@@ -325,17 +339,20 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                         return;
                     }
 
-                    if (recipe != null)
+                    if (!GroupUtils.IsPrefabExcludedInReclaiming(Utils.GetPrefabName(gemItem.Key.gameObject)))
                     {
-                        var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(gemItem.Key.gameObject, gemItem.Value, recipe.m_amount,
-                            gemItem.Value.m_quality, gemItem.Value.m_variant, false);
-                        recyclingAnalysisContext.Entries.Add(yieldEntry);
-                    }
-                    else if (gemItem.Key) // Merged gems do not have a recipe
-                    {
-                        var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(gemItem.Key.gameObject, gemItem.Value, 1,
-                            gemItem.Value.m_quality, gemItem.Value.m_variant, false);
-                        recyclingAnalysisContext.Entries.Add(yieldEntry);
+                        if (recipe != null)
+                        {
+                            var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(gemItem.Key.gameObject, gemItem.Value, recipe.m_amount,
+                                gemItem.Value.m_quality, gemItem.Value.m_variant, false);
+                            recyclingAnalysisContext.Entries.Add(yieldEntry);
+                        }
+                        else if (gemItem.Key) // Merged gems do not have a recipe
+                        {
+                            var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(gemItem.Key.gameObject, gemItem.Value, 1,
+                                gemItem.Value.m_quality, gemItem.Value.m_variant, false);
+                            recyclingAnalysisContext.Entries.Add(yieldEntry);
+                        }
                     }
                 }
             }
