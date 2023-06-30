@@ -21,6 +21,7 @@ namespace Recycle_N_Reclaim
 {
     [BepInPlugin(ModGUID, ModName, ModVersion)]
     [BepInDependency("org.bepinex.plugins.jewelcrafting", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("randyknapp.mods.auga", BepInDependency.DependencyFlags.SoftDependency)]
     public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
     {
         internal const string ModName = "Recycle_N_Reclaim";
@@ -31,6 +32,7 @@ namespace Recycle_N_Reclaim
         private static string ConfigFileFullPath = Paths.ConfigPath + Path.DirectorySeparatorChar + ConfigFileName;
         internal static Assembly epicLootAssembly;
         internal static string ConnectionError = "";
+        public static bool HasAuga;
         public static StationRecyclingTabHolder RecyclingTabButtonHolder { get; private set; }
         private ContainerRecyclingButtonHolder _containerRecyclingButton;
 
@@ -47,6 +49,12 @@ namespace Recycle_N_Reclaim
         //
         internal static Root yamlData = new Root();
         internal static Dictionary<string, HashSet<string>> predefinedGroups = new();
+
+        private static Assembly augaAssembly;
+        private static Type augaAPIType;
+        private static Type augaAssetsType;
+        private static Type _recyclingContainerButtonHolderType;
+        private static Type _recyclingStationButtonHolderType;
 
         public enum Toggle
         {
@@ -172,14 +180,124 @@ namespace Recycle_N_Reclaim
             {
                 YAMLUtils.WriteConfigFileFromResource(yamlPath);
             }
-            
+
             RNRExcludeListData.ValueChanged += OnValChangedUpdate; // check for file changes
             RNRExcludeListData.AssignLocalValue(File.ReadAllText(yamlPath));
 
 
+            HasAuga = Chainloader.PluginInfos.TryGetValue("randyknapp.mods.auga", out var augaPlugin);
+
+            // Patch Auga
+
+            if (HasAuga)
+            {
+                augaAssembly = Assembly.LoadFile(augaPlugin.Location);
+                var augaPluginType = augaAssembly.GetType("Auga.Auga");
+                var augaPatchMethod = augaPluginType.GetMethod("SimpleRecycling_StationRecyclingTabHolder_SetupTabButton_Patch");
+                var augaPatchMethod2 = augaPluginType.GetMethod("SimpleRecycling_ContainerRecyclingButtonHolder_SetupButton_Patch");
+
+                foreach (string resourceName in augaAssembly.GetManifestResourceNames())
+                {
+                    Debug.Log(resourceName);
+                }
+
+                _harmony.Patch(augaPatchMethod, new HarmonyMethod(typeof(Recycle_N_ReclaimPlugin), nameof(Prevent_Auga_SimpleRecycling_StationRecyclingTabHolder_SetupTabButton_Patch)));
+                _harmony.Patch(augaPatchMethod, new HarmonyMethod(typeof(Recycle_N_ReclaimPlugin), nameof(Prevent_Auga_SimpleRecycling_ContainerRecyclingButtonHolder_SetupButton_Patch)));
+            }
+
             Assembly assembly = Assembly.GetExecutingAssembly();
             _harmony.PatchAll(assembly);
             SetupWatcher();
+        }
+
+        public static bool Prevent_Auga_SimpleRecycling_StationRecyclingTabHolder_SetupTabButton_Patch()
+        {
+            // Access the RecyclingPanelIcon from the Auga Assets class
+            augaAssetsType = augaAssembly.GetType("Auga.AugaAssets");
+            var augaAssetsInstance = Activator.CreateInstance(augaAssetsType);
+            var recyclingPanelIconProperty = augaAssetsType.GetProperty("RecyclingPanelIcon");
+            var recyclingPanelIcon = (Sprite)recyclingPanelIconProperty.GetValue(augaAssetsInstance);
+
+            augaAPIType = augaAssembly.GetType("Auga.API");
+            MethodInfo addWorkbenchTabMethod = augaAPIType.GetMethod("Workbench_AddVanillaWorkbenchTab");
+            object[] parameters = new object[]
+            {
+                "RECYCLE", recyclingPanelIcon, "Recycle",
+                new Action(() =>
+                {
+                    var updateCraftingPanelMethod = AccessTools.Method(typeof(StationRecyclingTabHolder), nameof(StationRecyclingTabHolder.UpdateCraftingPanel));
+                    updateCraftingPanelMethod.Invoke(typeof(StationRecyclingTabHolder), new object[] { });
+                })
+            };
+
+            addWorkbenchTabMethod.Invoke(null, parameters);
+            return false;
+        }
+
+        public static bool Prevent_Auga_SimpleRecycling_ContainerRecyclingButtonHolder_SetupButton_Patch()
+        {
+            try
+            {
+                ContainerRecyclingButtonHolder.SetButtonState(false);
+            }
+            catch (Exception e)
+            {
+                Debug.Log("Failed to set the button state to false.");
+                Debug.LogException(e);
+            }
+
+            return false;
+        }
+        
+        /*public static bool IsRecycleTabActiveAuga()
+        {
+            if (augaAssembly == null)
+            {
+                Debug.LogError("augaAssembly is null.");
+                return false;
+            }
+
+            // Then load the inner DLL
+            Stream innerDllStream = augaAssembly.GetManifestResourceStream("Auga.Unity.Auga.dll"); //"Unity.Auga.dll"
+            if (innerDllStream == null)
+            {
+                Debug.Log("Failed to load the embedded Auga.Unity.Auga.dll");
+                return false;
+            }
+
+            byte[] innerDllBytes = new BinaryReader(innerDllStream).ReadBytes((int)innerDllStream.Length);
+            Assembly innerAssembly = Assembly.Load(innerDllBytes);
+
+            // Get the type of the WorkbenchPanelController
+            Type workbenchPanelControllerType = innerAssembly.GetType("AugaUnity.WorkbenchPanelController");
+            if (workbenchPanelControllerType == null)
+            {
+                Debug.Log("Failed to get the type AugaUnity.WorkbenchPanelController");
+                return false;
+            }
+
+            // Get the instance of the WorkbenchPanelController
+            PropertyInfo instanceProperty = workbenchPanelControllerType.GetProperty("instance");
+            object workbenchPanelControllerInstance = instanceProperty.GetValue(null);
+
+            // If the instance doesn't exist, return false
+            if (workbenchPanelControllerInstance == null) return false;
+
+            // Get the IsTabActiveById method
+            MethodInfo isTabActiveByIdMethod = workbenchPanelControllerType.GetMethod("IsTabActiveById");
+            bool result = (bool)isTabActiveByIdMethod.Invoke(workbenchPanelControllerInstance, new object[] { "RECYCLE" });
+
+            return result;
+        }*/
+
+        public static bool IsRecycleTabActiveAuga()
+        {
+            if (augaAssembly == null)
+            {
+                Debug.LogError("augaAssembly is null.");
+                return false;
+            }
+            return (bool)augaAPIType.GetMethod("Workbench_IsTabActive").Invoke(null, new object[] { StationRecyclingTabHolder._recyclingTabButtonGameObject });
         }
 
         private void Start()
@@ -277,7 +395,7 @@ namespace Recycle_N_Reclaim
                 Recycle_N_ReclaimLogger.LogError("Please check your entries for spelling and format!");
             }
         }
-        
+
         private static void OnValChangedUpdate()
         {
             Recycle_N_ReclaimLogger.LogDebug("OnValChanged called");

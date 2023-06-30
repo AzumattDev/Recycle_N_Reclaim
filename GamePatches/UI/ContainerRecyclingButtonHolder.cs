@@ -6,9 +6,9 @@ namespace Recycle_N_Reclaim.GamePatches.UI
     public class ContainerRecyclingButtonHolder : MonoBehaviour
     {
         private Button _recycleAllButton = null!;
-        private bool _prefired;
-        private Text _textComponent = null!;
-        private Image _imageComponent = null!;
+        private static bool _prefired;
+        private static Text _textComponent = null!;
+        private static Image _imageComponent = null!;
 
         public delegate void RecycleAllHandler();
 
@@ -49,10 +49,9 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             if (!InventoryGui.instance.IsContainerOpen() && _prefired) SetButtonState(false);
         }
 
-        private void SetupButton()
+        internal void SetupButton()
         {
-            _recycleAllButton = Instantiate(InventoryGui.instance.m_takeAllButton,
-                InventoryGui.instance.m_takeAllButton.transform);
+            _recycleAllButton = Instantiate(InventoryGui.instance.m_takeAllButton, InventoryGui.instance.m_takeAllButton.transform);
 
             _recycleAllButton.transform.SetParent(InventoryGui.instance.m_takeAllButton.transform.parent);
 
@@ -73,7 +72,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             return newLocalPosition;
         }
 
-        private void SetButtonState(bool showPrefire)
+        internal static void SetButtonState(bool showPrefire)
         {
             if (showPrefire)
             {

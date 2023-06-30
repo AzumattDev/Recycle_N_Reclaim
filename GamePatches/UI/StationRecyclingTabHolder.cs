@@ -8,7 +8,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 {
     public class StationRecyclingTabHolder : MonoBehaviour
     {
-        private GameObject _recyclingTabButtonGameObject;
+        internal static GameObject _recyclingTabButtonGameObject;
         private Button _recyclingTabButtonComponent;
         private List<RecyclingAnalysisContext> _recyclingAnalysisContexts = new();
 
@@ -35,7 +35,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             }
         }
 
-        private void SetupTabButton()
+        internal void SetupTabButton()
         {
             Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug("Creating tab button");
             var upgradeTabTransform = InventoryGui.instance.m_tabUpgrade.transform;
@@ -165,6 +165,10 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
         public bool InRecycleTab()
         {
+            if(Recycle_N_ReclaimPlugin.HasAuga)
+            {
+                return Recycle_N_ReclaimPlugin.IsRecycleTabActiveAuga();
+            }
             if (_recyclingTabButtonComponent == null) return false;
             return !_recyclingTabButtonComponent.interactable;
         }
@@ -176,6 +180,11 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
         public void SetActive(bool active)
         {
+            if (Recycle_N_ReclaimPlugin.HasAuga)
+            {
+                return;
+            }
+
             if (Recycle_N_ReclaimPlugin.EnableExperimentalCraftingTabUI.Value == Recycle_N_ReclaimPlugin.Toggle.Off) return;
 
             _recyclingTabButtonGameObject.SetActive(active);
