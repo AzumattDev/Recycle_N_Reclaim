@@ -229,27 +229,10 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
 
         private static void AnalyzeMaterialYieldForItem(RecyclingAnalysisContext analysisContext)
         {
-            if (Recycle_N_ReclaimPlugin.RecyclingRate?.Value == null)
-            {
-                if (!_loggedErrorsOnce)
-                    Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError($"Recycling Rate is Null");
-
-                _loggedErrorsOnce = true;
-                return;
-            }
             
             var recyclingRate = Recycle_N_ReclaimPlugin.RecyclingRate.Value;
             var itemData = analysisContext.Item;
             var recipe = analysisContext.Recipe;
-
-            if (recipe == null)
-            {
-                if (!_loggedErrorsOnce)
-                    Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError($"Context Recipe is null. How'd this happen?");
-
-                _loggedErrorsOnce = true;
-                return;
-            }
             
             var amountToCraftedRecipeAmountPercentage = itemData.m_stack / (double)recipe.m_amount;
 
