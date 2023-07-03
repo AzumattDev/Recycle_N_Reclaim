@@ -54,7 +54,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
             _recyclingTabButtonComponent = _recyclingTabButtonGameObject.GetComponent<Button>();
             _recyclingTabButtonComponent.interactable = true;
-            _recyclingTabButtonComponent.onClick.RemoveAllListeners();
+            _recyclingTabButtonComponent.onClick = new Button.ButtonClickedEvent();
             _recyclingTabButtonComponent.onClick.AddListener(OnRecycleClick);
             bool shouldBeActive = Player.m_localPlayer.GetCurrentCraftingStation() != null;
             _recyclingTabButtonGameObject.SetActive(shouldBeActive);
