@@ -14,11 +14,11 @@ namespace Recycle_N_Reclaim.GamePatches;
 public static class UpdateItemDragPatch
 {
     // Caching Reflection Calls
-    internal static Type epicLootType = Recycle_N_ReclaimPlugin.epicLootAssembly?.GetType("EpicLoot.ItemDataExtensions");
-    internal static MethodInfo isMagicMethod = epicLootType?.GetMethod("IsMagic", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(ItemDrop.ItemData) }, null);
-    internal static MethodInfo getRarityMethod = epicLootType?.GetMethod("GetRarity", BindingFlags.Public | BindingFlags.Static);
-    internal static Type enchantTabControllerType = Recycle_N_ReclaimPlugin.epicLootAssembly?.GetType("EpicLoot.Crafting.EnchantTabController");
-    internal static MethodInfo getEnchantCostsMethod = enchantTabControllerType?.GetMethod("GetEnchantCosts", BindingFlags.Public | BindingFlags.Static);
+    internal static readonly Type? epicLootType = Recycle_N_ReclaimPlugin.epicLootAssembly?.GetType("EpicLoot.ItemDataExtensions");
+    internal static readonly MethodInfo? isMagicMethod = epicLootType?.GetMethod("IsMagic", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(ItemDrop.ItemData) }, null);
+    internal static readonly MethodInfo? getRarityMethod = epicLootType?.GetMethod("GetRarity", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(ItemDrop.ItemData) }, null);
+    internal static readonly Type? enchantTabControllerType = Recycle_N_ReclaimPlugin.epicLootAssembly?.GetType("EpicLoot.Crafting.EnchantTabController");
+    internal static readonly MethodInfo? getEnchantCostsMethod = enchantTabControllerType?.GetMethod("GetEnchantCosts", BindingFlags.Public | BindingFlags.Static);
 
     private static void Postfix(InventoryGui __instance, ItemDrop.ItemData ___m_dragItem, Inventory ___m_dragInventory, int ___m_dragAmount, ref GameObject ___m_dragGo)
     {

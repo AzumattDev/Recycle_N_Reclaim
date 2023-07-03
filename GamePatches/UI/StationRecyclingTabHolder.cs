@@ -10,7 +10,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
     {
         private GameObject _recyclingTabButtonGameObject;
         private Button _recyclingTabButtonComponent;
-        private List<RecyclingAnalysisContext> _recyclingAnalysisContexts = new();
+        private List<RecyclingAnalysisContext> _recyclingAnalysisContexts = new List<RecyclingAnalysisContext>();
 
         private void Start()
         {
@@ -37,6 +37,9 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
         private void SetupTabButton()
         {
+            if (Player.m_localPlayer == null)
+                return;
+            
             Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug("Creating tab button");
             var upgradeTabTransform = InventoryGui.instance.m_tabUpgrade.transform;
             _recyclingTabButtonGameObject = Instantiate(InventoryGui.instance.m_tabUpgrade.gameObject,
@@ -51,9 +54,9 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
             _recyclingTabButtonComponent = _recyclingTabButtonGameObject.GetComponent<Button>();
             _recyclingTabButtonComponent.interactable = true;
-            _recyclingTabButtonComponent.onClick = new Button.ButtonClickedEvent();
+            _recyclingTabButtonComponent.onClick.RemoveAllListeners();
             _recyclingTabButtonComponent.onClick.AddListener(OnRecycleClick);
-            bool shouldBeActive = Player.m_localPlayer?.GetCurrentCraftingStation() != null;
+            bool shouldBeActive = Player.m_localPlayer.GetCurrentCraftingStation() != null;
             _recyclingTabButtonGameObject.SetActive(shouldBeActive);
         }
 
@@ -86,10 +89,13 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
             if (igui.get_m_availableRecipes().Count > 0)
             {
-                igui.SetRecipe(igui.get_m_selectedRecipe().Key != null ? igui.GetSelectedRecipeIndex() : 0, true);
+                if (igui.get_m_selectedRecipe().Key != null)
+                    InventoryGuiPatches.SetRecipe(igui,InventoryGuiPatches.GetSelectedRecipeIndex(igui,false), true);
+                else
+                    InventoryGuiPatches.SetRecipe(igui,0, true);
             }
             else
-                igui.SetRecipe(-1, true);
+                InventoryGuiPatches.SetRecipe(igui,-1, true);
         }
 
         public void UpdateRecyclingList()
@@ -131,7 +137,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             var m_recipeListRoot = igui.m_recipeListRoot;
             var element = Instantiate(igui.m_recipeElementPrefab, m_recipeListRoot);
             element.SetActive(true);
-            ((RectTransform)element.transform).anchoredPosition = new Vector2(0.0f, count * -igui.m_recipeListSpace);
+            ((RectTransform) element.transform).anchoredPosition = new Vector2(0.0f, count * -igui.m_recipeListSpace);
             var component1 = element.transform.Find("icon").GetComponent<Image>();
             component1.sprite = context.Item.GetIcon();
             component1.color = context.RecyclingImpediments.Count == 0 ? Color.white : new Color(1f, 0.0f, 1f, 0.0f);
@@ -143,7 +149,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             component2.color = context.RecyclingImpediments.Count == 0 ? Color.white : new Color(0.66f, 0.66f, 0.66f, 1f);
             var component3 = element.transform.Find("Durability").GetComponent<GuiBar>();
             if (context.Item.m_shared.m_useDurability &&
-                context.Item.m_durability < (double)context.Item.GetMaxDurability())
+                context.Item.m_durability < (double) context.Item.GetMaxDurability())
             {
                 component3.gameObject.SetActive(true);
                 component3.SetValue(context.Item.GetDurabilityPercentage());
@@ -156,7 +162,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             component4.gameObject.SetActive(true);
             component4.text = context.Item.m_quality.ToString();
 
-            element.GetComponent<Button>().onClick.AddListener(() => igui.OnSelectedRecipe(element));
+            element.GetComponent<Button>().onClick.AddListener(() => InventoryGuiPatches.OnSelectedRecipe(igui, element));
             m_recipeList.Add(element);
             igui.get_m_availableRecipes()
                 .Add(new KeyValuePair<Recipe, ItemDrop.ItemData>(context.Recipe, context.Item));
@@ -171,6 +177,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
         public void SetInteractable(bool interactable)
         {
+            EnsureRecyclingTabExists();
             _recyclingTabButtonComponent.interactable = interactable;
         }
 
@@ -184,7 +191,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         public void UpdateRecipe(Player player, float dt)
         {
             var igui = InventoryGui.instance;
-            var selectedRecipeIndex = igui.GetSelectedRecipeIndex();
+            var selectedRecipeIndex = InventoryGuiPatches.GetSelectedRecipeIndex(igui,false);
 
             UpdateRecyclingAnalysisContexts(selectedRecipeIndex, player);
             UpdateCraftingStationUI(player);
@@ -315,7 +322,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
                 {
                     Reclaimer.DoInventoryChanges(_recyclingAnalysisContexts[selectedRecipeIndex], player.GetInventory(), player);
                     igui.set_m_craftTimer(-1f);
-                    igui.SetRecipe(-1, false);
+                    InventoryGuiPatches.SetRecipe(igui,-1, false);
                     UpdateCraftingPanel();
                 }
             }
@@ -342,11 +349,16 @@ namespace Recycle_N_Reclaim.GamePatches.UI
                 var elementTransform = igui.m_recipeRequirementList[i].transform;
                 if (i < filteredEntries.Count)
                 {
-                    SetupRequirementEpicLoot(elementTransform, filteredEntries[i]);
+                    var entry = analysisContexts.Entries[i];
+                    if(entry.Amount == 0) 
+                        InventoryGui.HideRequirement(elementTransform);
+                    else
+                        SetupRequirementEpicLoot(elementTransform, filteredEntries[i]);
                 }
                 else
                 {
                     InventoryGui.HideRequirement(elementTransform);
+                    continue;
                 }
             }
         }

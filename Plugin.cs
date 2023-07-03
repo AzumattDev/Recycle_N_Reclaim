@@ -29,7 +29,7 @@ namespace Recycle_N_Reclaim
         private const string ModGUID = Author + "." + ModName;
         private static string ConfigFileName = ModGUID + ".cfg";
         private static string ConfigFileFullPath = Paths.ConfigPath + Path.DirectorySeparatorChar + ConfigFileName;
-        internal static Assembly epicLootAssembly;
+        internal static Assembly? epicLootAssembly;
         internal static string ConnectionError = "";
         public static StationRecyclingTabHolder RecyclingTabButtonHolder { get; private set; }
         private ContainerRecyclingButtonHolder _containerRecyclingButton;
