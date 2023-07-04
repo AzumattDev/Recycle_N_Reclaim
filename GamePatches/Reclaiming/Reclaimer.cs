@@ -23,8 +23,9 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 var analysisContext = new RecyclingAnalysisContext(item);
                 analysisList.Add(analysisContext);
                 // log the container name and prefab name
-                Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"containerName: {containerName}, prefabName: {Utils.GetPrefabName(item.m_dropPrefab)}");
-                if (!GroupUtils.IsPrefabExcludedInContainer(containerName, Utils.GetPrefabName(item.m_dropPrefab)))
+                var prefabName = global::Utils.GetPrefabName(item.m_dropPrefab);
+                Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"containerName: {containerName}, prefabName: {prefabName}");
+                if (!GroupUtils.IsPrefabExcludedInContainer(containerName, prefabName))
                 {
                     RecycleOneItemInInventory(analysisContext, inventory, player);
                 }
@@ -263,7 +264,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 var (finalAmount, initialRecipeHadZero) = CalculateFinalAmount(itemData, resource, amountToCraftedRecipeAmountPercentage,
                     recyclingRate);
 
-                if (!GroupUtils.IsPrefabExcludedInReclaiming(Utils.GetPrefabName(preFab)))
+                if (!GroupUtils.IsPrefabExcludedInReclaiming(global::Utils.GetPrefabName(preFab)))
                 {
                     analysisContext.Entries.Add(new RecyclingAnalysisContext.ReclaimingYieldEntry(preFab, rItemData, finalAmount, rItemData.m_quality, rItemData.m_variant, initialRecipeHadZero));
                 }
@@ -336,7 +337,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                         return;
                     }
 
-                    if (!GroupUtils.IsPrefabExcludedInReclaiming(Utils.GetPrefabName(kvp.Key.gameObject)))
+                    if (!GroupUtils.IsPrefabExcludedInReclaiming(global::Utils.GetPrefabName(kvp.Key.gameObject)))
                     {
                         if (recipe2 != null)
                         {
@@ -393,7 +394,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                         return;
                     }
 
-                    if (!GroupUtils.IsPrefabExcludedInReclaiming(Utils.GetPrefabName(gemItem.Key.gameObject)))
+                    if (!GroupUtils.IsPrefabExcludedInReclaiming(global::Utils.GetPrefabName(gemItem.Key.gameObject)))
                     {
                         if (recipe != null)
                         {

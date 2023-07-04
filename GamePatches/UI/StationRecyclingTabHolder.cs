@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Auga;
 using Recycle_N_Reclaim.GamePatches.Recycling;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,6 +12,9 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         private GameObject _recyclingTabButtonGameObject;
         private Button _recyclingTabButtonComponent;
         private List<RecyclingAnalysisContext> _recyclingAnalysisContexts = new List<RecyclingAnalysisContext>();
+        private WorkbenchTabData _augaTabData;
+        private GameObject _itemInfoGo;
+        private GameObject _descriptionBoxGo;
 
         private void Start()
         {
@@ -40,23 +44,50 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             if (Player.m_localPlayer == null)
                 return;
             
-            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug("Creating tab button");
-            var upgradeTabTransform = InventoryGui.instance.m_tabUpgrade.transform;
-            _recyclingTabButtonGameObject = Instantiate(InventoryGui.instance.m_tabUpgrade.gameObject,
-                upgradeTabTransform.position, upgradeTabTransform.rotation, upgradeTabTransform.parent);
-            _recyclingTabButtonGameObject.name = "RECLAIM";
-            // Unity3d is inconsistent and for whatever reason game object order in the parent transform
-            // matters for the UI components 😐
-            _recyclingTabButtonGameObject.transform.parent.Find("TabBorder").SetAsLastSibling();
-            _recyclingTabButtonGameObject.transform.localPosition = new Vector3(-45, -94, 0);
-            var textComponent = _recyclingTabButtonGameObject.GetComponentInChildren<Text>();
-            textComponent.text = "RECLAIM";
-
-            _recyclingTabButtonComponent = _recyclingTabButtonGameObject.GetComponent<Button>();
-            _recyclingTabButtonComponent.interactable = true;
-            _recyclingTabButtonComponent.onClick = new Button.ButtonClickedEvent();
-            _recyclingTabButtonComponent.onClick.AddListener(OnRecycleClick);
-            bool shouldBeActive = Player.m_localPlayer.GetCurrentCraftingStation() != null;
+            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug("Creating Workbench Tab");
+            
+            if (Recycle_N_ReclaimPlugin.HasAuga)
+            {
+                var exists = Auga.API.Workbench_HasWorkbenchTab("Reclaim");
+                if (!exists)
+                {
+                    var pngFile = Utils.LoadTextureFromResources("RecyclingPanel.png");
+                    
+                    var buttonSprite = Sprite.Create(pngFile, new Rect(0,0,pngFile.width,pngFile.height), new Vector2(0,0),100.0f);
+                    if (Recycle_N_ReclaimPlugin.epicLootAssembly != null)
+                        _augaTabData = API.Workbench_AddWorkbenchTab("Reclaim", buttonSprite, "Reclaim-N-Recycle", (index) => OnRecycleClick());
+                    else
+                        _augaTabData = API.Workbench_AddVanillaWorkbenchTab("Reclaim", buttonSprite, "Reclaim-N-Recycle", (index) => OnRecycleClick());
+                    
+                    var tabButtonGameObject = _augaTabData.TabButtonGO;
+                    _recyclingTabButtonGameObject = tabButtonGameObject;
+                    _recyclingTabButtonComponent = tabButtonGameObject.GetComponent<Button>();
+                    _itemInfoGo = _augaTabData.ItemInfoGO;
+                    var topDivider = API.ComplexTooltip_AddDivider(_itemInfoGo);
+                    _descriptionBoxGo = API.ComplexTooltip_AddTwoColumnTextBox(_itemInfoGo);
+                    API.ComplexTooltip_EnableDescription(_itemInfoGo,false);
+                }                
+            }
+            else
+            {
+                var upgradeTabTransform = InventoryGui.instance.m_tabUpgrade.transform;
+                _recyclingTabButtonGameObject = Instantiate(InventoryGui.instance.m_tabUpgrade.gameObject,
+                    upgradeTabTransform.position, upgradeTabTransform.rotation, upgradeTabTransform.parent);
+                _recyclingTabButtonGameObject.name = "RECLAIM";
+                // Unity3d is inconsistent and for whatever reason game object order in the parent transform
+                // matters for the UI components 😐
+                _recyclingTabButtonGameObject.transform.parent.Find("TabBorder").SetAsLastSibling();
+                _recyclingTabButtonGameObject.transform.localPosition = new Vector3(-45, -94, 0);
+                _recyclingTabButtonComponent = _recyclingTabButtonGameObject.GetComponent<Button>();
+                _recyclingTabButtonComponent.interactable = true;
+                _recyclingTabButtonComponent.onClick = new Button.ButtonClickedEvent();
+                _recyclingTabButtonComponent.onClick.AddListener(OnRecycleClick);
+                var textComponent = _recyclingTabButtonGameObject.GetComponentInChildren<Text>();
+                if (textComponent != null)
+                    textComponent.text = "RECLAIM";
+            }
+            
+            var shouldBeActive = Player.m_localPlayer.GetCurrentCraftingStation() != null;
             _recyclingTabButtonGameObject.SetActive(shouldBeActive);
         }
 
@@ -96,6 +127,11 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             }
             else
                 InventoryGuiPatches.SetRecipe(igui,-1, true);
+
+            if (Recycle_N_ReclaimPlugin.HasAuga)
+            {
+                API.ComplexTooltip_SetItem(_itemInfoGo,igui.get_m_selectedRecipe().Value);
+            }
         }
 
         public void UpdateRecyclingList()
@@ -269,6 +305,15 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             else
                 SetActive(igui.m_itemCraftType.gameObject, false);
 
+            if (Recycle_N_ReclaimPlugin.HasAuga)
+            {
+                if (_descriptionBoxGo == null)
+                {
+                    _descriptionBoxGo = API.ComplexTooltip_AddTwoColumnTextBox(_augaTabData.ItemInfoGO);
+                }
+                API.TooltipTextBox_AddLine(_descriptionBoxGo,igui.m_recipeDecription.text,true,true);
+            }
+            
             SetActive(igui.m_variantButton.gameObject, igui.get_m_selectedRecipe().Key.m_item.m_itemData.m_shared.m_variants > 1 && igui.get_m_selectedRecipe().Value == null);
 
             if (Recycle_N_ReclaimPlugin.epicLootAssembly == null)

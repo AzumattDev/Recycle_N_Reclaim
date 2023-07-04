@@ -31,6 +31,7 @@ namespace Recycle_N_Reclaim
         private static string ConfigFileFullPath = Paths.ConfigPath + Path.DirectorySeparatorChar + ConfigFileName;
         internal static Assembly? epicLootAssembly;
         internal static string ConnectionError = "";
+        public static bool HasAuga;
         public static StationRecyclingTabHolder RecyclingTabButtonHolder { get; private set; }
         private ContainerRecyclingButtonHolder _containerRecyclingButton;
 
@@ -192,6 +193,8 @@ namespace Recycle_N_Reclaim
             if (!Chainloader.PluginInfos.ContainsKey("randyknapp.mods.epicloot")) return;
             epicLootAssembly = Chainloader.PluginInfos["randyknapp.mods.epicloot"].Instance.GetType().Assembly;
             Recycle_N_ReclaimLogger.LogDebug("Epic Loot found, providing compatibility");
+            
+            HasAuga = Auga.API.IsLoaded();
         }
 
         private void AutoDoc()

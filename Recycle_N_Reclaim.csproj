@@ -73,6 +73,9 @@
         <Reference Include="assembly_valheim">
             <HintPath>$(PublicizedAssembliesPath)\assembly_valheim_publicized.dll</HintPath>
         </Reference>
+        <Reference Include="AugaAPI">
+          <HintPath>Libs\AugaAPI.dll</HintPath>
+        </Reference>
         <Reference Include="BepInEx">
             <HintPath>$(BepInExPath)\core\BepInEx.dll</HintPath>
         </Reference>
@@ -117,6 +120,7 @@
         <Compile Include="GamePatches\UI\InventoryGuiPatches.cs" />
         <Compile Include="GamePatches\UI\StationRecyclingTabHolder.cs" />
         <Compile Include="GamePatches\UI\UIDragger.cs" />
+        <Compile Include="GamePatches\ObjectDumper.cs" />
         <Compile Include="GamePatches\Utils.cs" />
         <Compile Include="GamePatches\VersionHandshake.cs" />
         <Compile Include="Managers\LocalizationManager.cs" />
@@ -128,8 +132,12 @@
     </ItemGroup>
     <ItemGroup>
         <Content Include=".gitignore" />
+        <EmbeddedResource Include="Assets\RecyclingPanel.png" />
         <Content Include="environment.props" />
         <Content Include="ILRepack.targets" />
+        <Content Include="Libs\AugaAPI.dll">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
         <Content Include="Libs\Jewelcrafting.dll" />
         <Content Include="Libs\JewelcraftingAPI.dll">
           <CopyToOutputDirectory>Always</CopyToOutputDirectory>
