@@ -24,7 +24,7 @@ namespace Recycle_N_Reclaim
     public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
     {
         internal const string ModName = "Recycle_N_Reclaim";
-        internal const string ModVersion = "1.1.1";
+        internal const string ModVersion = "1.1.2";
         internal const string Author = "Azumatt";
         private const string ModGUID = Author + "." + ModName;
         private static string ConfigFileName = ModGUID + ".cfg";
@@ -186,6 +186,7 @@ namespace Recycle_N_Reclaim
         private void Start()
         {
             AutoDoc();
+            HasAuga = Auga.API.IsLoaded();
             _containerRecyclingButton = gameObject.AddComponent<ContainerRecyclingButtonHolder>();
             _containerRecyclingButton.OnRecycleAllTriggered += ContainerRecyclingTriggered;
             RecyclingTabButtonHolder = gameObject.AddComponent<StationRecyclingTabHolder>();
@@ -193,8 +194,6 @@ namespace Recycle_N_Reclaim
             if (!Chainloader.PluginInfos.ContainsKey("randyknapp.mods.epicloot")) return;
             epicLootAssembly = Chainloader.PluginInfos["randyknapp.mods.epicloot"].Instance.GetType().Assembly;
             Recycle_N_ReclaimLogger.LogDebug("Epic Loot found, providing compatibility");
-            
-            HasAuga = Auga.API.IsLoaded();
         }
 
         private void AutoDoc()
