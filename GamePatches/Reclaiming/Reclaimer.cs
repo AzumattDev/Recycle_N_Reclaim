@@ -117,7 +117,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
 
             if (analysisContext.Recipe.m_craftingStation?.m_name != null
                 && Recycle_N_ReclaimPlugin.StationFilterEnabled.Value == Recycle_N_ReclaimPlugin.Toggle.On
-                && Recycle_N_ReclaimPlugin.StationFilterList.Contains(analysisContext.Recipe.m_craftingStation.m_name))
+                && Recycle_N_ReclaimPlugin.StationFilterList.Contains(global::Utils.GetPrefabName(analysisContext.Recipe.m_craftingStation.transform.root.gameObject)))
                 analysisContext.DisplayImpediments.Add(
                     $"Item is from filtered station ({Recycle_N_ReclaimPlugin.Localize(analysisContext.Recipe.m_craftingStation.m_name)})");
         }
