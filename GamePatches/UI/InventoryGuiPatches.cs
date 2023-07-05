@@ -68,7 +68,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         {
             if (Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder == null || !Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder.InRecycleTab()) return;
             Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder.UpdateRecyclingList();
-            SetRecipe(InventoryGui.instance,-1, false);
+            SetRecipe(InventoryGui.instance, -1, false);
         }
 
         [HarmonyPostfix]
@@ -78,7 +78,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         {
             if (Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder == null || __instance != Player.m_localPlayer || !Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder.InRecycleTab()) return;
             Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder.UpdateRecyclingList();
-            SetRecipe(InventoryGui.instance,-1, false);
+            SetRecipe(InventoryGui.instance, -1, false);
         }
 
         [HarmonyReversePatch]

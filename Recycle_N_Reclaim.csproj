@@ -105,10 +105,10 @@
             <HintPath>$(CorlibPath)\UnityEngine.IMGUIModule.dll</HintPath>
         </Reference>
         <Reference Include="UnityEngine.InputLegacyModule">
-          <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Valheim_PTB_BEP\unstripped_corlib\UnityEngine.InputLegacyModule.dll</HintPath>
+          <HintPath>$(CorlibPath)\UnityEngine.InputLegacyModule.dll</HintPath>
         </Reference>
         <Reference Include="UnityEngine.JSONSerializeModule">
-          <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Valheim_PTB_BEP\unstripped_corlib\UnityEngine.JSONSerializeModule.dll</HintPath>
+          <HintPath>$(CorlibPath)\UnityEngine.JSONSerializeModule.dll</HintPath>
         </Reference>
         <Reference Include="UnityEngine.UI">
             <HintPath>$(CorlibPath)\UnityEngine.UI.dll</HintPath>

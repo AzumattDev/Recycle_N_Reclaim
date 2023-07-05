@@ -87,7 +87,7 @@ namespace Recycle_N_Reclaim.GamePatches
             Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogInfo($"Hash/Version check, local: {Recycle_N_ReclaimPlugin.ModVersion} {hashForAssembly} remote: {version} {hash}");
             if (hash != hashForAssembly || version != Recycle_N_ReclaimPlugin.ModVersion)
             {
-                Recycle_N_ReclaimPlugin.ConnectionError = $"WardIsLove Installed: {Recycle_N_ReclaimPlugin.ModVersion} {hashForAssembly}\n Needed: {version} {hash}";
+                Recycle_N_ReclaimPlugin.ConnectionError = $"{Recycle_N_ReclaimPlugin.ModName} Installed: {Recycle_N_ReclaimPlugin.ModVersion} {hashForAssembly}\n Needed: {version} {hash}";
                 if (!ZNet.instance.IsServer()) return;
                 // Different versions - force disconnect client from server
                 Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogWarning($"Peer ({rpc.m_socket.GetHostName()}) has incompatible version, disconnecting...");

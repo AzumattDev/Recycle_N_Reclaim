@@ -43,30 +43,30 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         {
             if (Player.m_localPlayer == null)
                 return;
-            
+
             Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug("Creating Workbench Tab");
-            
+
             if (Recycle_N_ReclaimPlugin.HasAuga)
             {
                 var exists = Auga.API.Workbench_HasWorkbenchTab("Reclaim");
                 if (!exists)
                 {
                     var pngFile = Utils.LoadTextureFromResources("RecyclingPanel.png");
-                    
-                    var buttonSprite = Sprite.Create(pngFile, new Rect(0,0,pngFile.width,pngFile.height), new Vector2(0,0),100.0f);
+
+                    var buttonSprite = Sprite.Create(pngFile, new Rect(0, 0, pngFile.width, pngFile.height), new Vector2(0, 0), 100.0f);
                     if (Recycle_N_ReclaimPlugin.epicLootAssembly != null)
-                        _augaTabData = API.Workbench_AddWorkbenchTab("Reclaim", buttonSprite, "Reclaim-N-Recycle", (index) => OnRecycleClick());
+                        _augaTabData = API.Workbench_AddWorkbenchTab("Reclaim", buttonSprite, Recycle_N_ReclaimPlugin.ModName.Replace("_", "-"), (index) => OnRecycleClick());
                     else
-                        _augaTabData = API.Workbench_AddVanillaWorkbenchTab("Reclaim", buttonSprite, "Reclaim-N-Recycle", (index) => OnRecycleClick());
-                    
+                        _augaTabData = API.Workbench_AddVanillaWorkbenchTab("Reclaim", buttonSprite, Recycle_N_ReclaimPlugin.ModName.Replace("_", "-"), (index) => OnRecycleClick());
+
                     var tabButtonGameObject = _augaTabData.TabButtonGO;
                     _recyclingTabButtonGameObject = tabButtonGameObject;
                     _recyclingTabButtonComponent = tabButtonGameObject.GetComponent<Button>();
                     _itemInfoGo = _augaTabData.ItemInfoGO;
                     var topDivider = API.ComplexTooltip_AddDivider(_itemInfoGo);
                     _descriptionBoxGo = API.ComplexTooltip_AddTwoColumnTextBox(_itemInfoGo);
-                    API.ComplexTooltip_EnableDescription(_itemInfoGo,false);
-                }                
+                    API.ComplexTooltip_EnableDescription(_itemInfoGo, false);
+                }
             }
             else
             {
@@ -86,7 +86,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
                 if (textComponent != null)
                     textComponent.text = "RECLAIM";
             }
-            
+
             var shouldBeActive = Player.m_localPlayer.GetCurrentCraftingStation() != null;
             _recyclingTabButtonGameObject.SetActive(shouldBeActive);
         }
@@ -121,16 +121,16 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             if (igui.get_m_availableRecipes().Count > 0)
             {
                 if (igui.get_m_selectedRecipe().Key != null)
-                    InventoryGuiPatches.SetRecipe(igui,InventoryGuiPatches.GetSelectedRecipeIndex(igui,false), true);
+                    InventoryGuiPatches.SetRecipe(igui, InventoryGuiPatches.GetSelectedRecipeIndex(igui, false), true);
                 else
-                    InventoryGuiPatches.SetRecipe(igui,0, true);
+                    InventoryGuiPatches.SetRecipe(igui, 0, true);
             }
             else
-                InventoryGuiPatches.SetRecipe(igui,-1, true);
+                InventoryGuiPatches.SetRecipe(igui, -1, true);
 
             if (Recycle_N_ReclaimPlugin.HasAuga)
             {
-                API.ComplexTooltip_SetItem(_itemInfoGo,igui.get_m_selectedRecipe().Value);
+                API.ComplexTooltip_SetItem(_itemInfoGo, igui.get_m_selectedRecipe().Value);
             }
         }
 
@@ -173,7 +173,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             var m_recipeListRoot = igui.m_recipeListRoot;
             var element = Instantiate(igui.m_recipeElementPrefab, m_recipeListRoot);
             element.SetActive(true);
-            ((RectTransform) element.transform).anchoredPosition = new Vector2(0.0f, count * -igui.m_recipeListSpace);
+            ((RectTransform)element.transform).anchoredPosition = new Vector2(0.0f, count * -igui.m_recipeListSpace);
             var component1 = element.transform.Find("icon").GetComponent<Image>();
             component1.sprite = context.Item.GetIcon();
             component1.color = context.RecyclingImpediments.Count == 0 ? Color.white : new Color(1f, 0.0f, 1f, 0.0f);
@@ -185,7 +185,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             component2.color = context.RecyclingImpediments.Count == 0 ? Color.white : new Color(0.66f, 0.66f, 0.66f, 1f);
             var component3 = element.transform.Find("Durability").GetComponent<GuiBar>();
             if (context.Item.m_shared.m_useDurability &&
-                context.Item.m_durability < (double) context.Item.GetMaxDurability())
+                context.Item.m_durability < (double)context.Item.GetMaxDurability())
             {
                 component3.gameObject.SetActive(true);
                 component3.SetValue(context.Item.GetDurabilityPercentage());
@@ -227,7 +227,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         public void UpdateRecipe(Player player, float dt)
         {
             var igui = InventoryGui.instance;
-            var selectedRecipeIndex = InventoryGuiPatches.GetSelectedRecipeIndex(igui,false);
+            var selectedRecipeIndex = InventoryGuiPatches.GetSelectedRecipeIndex(igui, false);
 
             UpdateRecyclingAnalysisContexts(selectedRecipeIndex, player);
             UpdateCraftingStationUI(player);
@@ -311,9 +311,10 @@ namespace Recycle_N_Reclaim.GamePatches.UI
                 {
                     _descriptionBoxGo = API.ComplexTooltip_AddTwoColumnTextBox(_augaTabData.ItemInfoGO);
                 }
-                API.TooltipTextBox_AddLine(_descriptionBoxGo,igui.m_recipeDecription.text,true,true);
+
+                API.TooltipTextBox_AddLine(_descriptionBoxGo, igui.m_recipeDecription.text, true, true);
             }
-            
+
             SetActive(igui.m_variantButton.gameObject, igui.get_m_selectedRecipe().Key.m_item.m_itemData.m_shared.m_variants > 1 && igui.get_m_selectedRecipe().Value == null);
 
             if (Recycle_N_ReclaimPlugin.epicLootAssembly == null)
@@ -367,7 +368,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
                 {
                     Reclaimer.DoInventoryChanges(_recyclingAnalysisContexts[selectedRecipeIndex], player.GetInventory(), player);
                     igui.set_m_craftTimer(-1f);
-                    InventoryGuiPatches.SetRecipe(igui,-1, false);
+                    InventoryGuiPatches.SetRecipe(igui, -1, false);
                     UpdateCraftingPanel();
                 }
             }
@@ -395,7 +396,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
                 if (i < filteredEntries.Count)
                 {
                     var entry = analysisContexts.Entries[i];
-                    if(entry.Amount == 0) 
+                    if (entry.Amount == 0)
                         InventoryGui.HideRequirement(elementTransform);
                     else
                         SetupRequirementEpicLoot(elementTransform, filteredEntries[i]);

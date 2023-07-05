@@ -10,7 +10,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
     public static class Reclaimer
     {
         private static bool _loggedErrorsOnce = false;
-        
+
         public static void RecycleInventoryForAllRecipes(Inventory inventory, string containerName, Player player)
         {
             var itemListSnapshot = new List<ItemDrop.ItemData>();
@@ -230,11 +230,10 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
 
         private static void AnalyzeMaterialYieldForItem(RecyclingAnalysisContext analysisContext)
         {
-            
             var recyclingRate = Recycle_N_ReclaimPlugin.RecyclingRate.Value;
             var itemData = analysisContext.Item;
             var recipe = analysisContext.Recipe;
-            
+
             var amountToCraftedRecipeAmountPercentage = itemData.m_stack / (double)recipe.m_amount;
 
             foreach (var resource in recipe.m_resources)
@@ -249,7 +248,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 {
                     continue;
                 }
-                
+
 
                 var preFab = ObjectDB.instance.m_items.FirstOrDefault(item =>
                     item.GetComponent<ItemDrop>().m_itemData.m_shared.m_name == rItemData.m_shared.m_name);
@@ -268,22 +267,22 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 {
                     analysisContext.Entries.Add(new RecyclingAnalysisContext.ReclaimingYieldEntry(preFab, rItemData, finalAmount, rItemData.m_quality, rItemData.m_variant, initialRecipeHadZero));
                 }
-                
+
                 if (Recycle_N_ReclaimPlugin.PreventZeroResourceYields.Value == Recycle_N_ReclaimPlugin.Toggle.On && finalAmount == 0 && !initialRecipeHadZero)
                 {
                     analysisContext.RecyclingImpediments.Add($"Recycling would yield 0 of {Localization.instance.Localize(resource.m_resItem.m_itemData.m_shared.m_name)}");
                 }
             }
 
-            
+
             if (Recycle_N_ReclaimPlugin.epicLootAssembly == null)
             {
                 goto jewelcrafting;
             }
-            
+
             var isMagic = false;
             var cancel = false;
-            
+
             if (UpdateItemDragPatch.isMagicMethod == null)
             {
                 if (!_loggedErrorsOnce)
@@ -304,10 +303,10 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                     if (!_loggedErrorsOnce)
                         Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError($"EpicLoot Loaded, but missing GetRarity() Method.");
                     _loggedErrorsOnce = true;
-                    
+
                     goto jewelcrafting;
                 }
-                
+
                 var rarity = (int)UpdateItemDragPatch.getRarityMethod.Invoke(null, new object[] { itemData })!;
 
                 //Validate Existence of Method:
@@ -319,7 +318,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                     _loggedErrorsOnce = true;
                     goto jewelcrafting;
                 }
-                
+
                 List<KeyValuePair<ItemDrop, int>>? magicReqs =
                     (List<KeyValuePair<ItemDrop, int>>)UpdateItemDragPatch.getEnchantCostsMethod.Invoke(null, new object[] { itemData, rarity })!;
 
@@ -356,7 +355,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             }
 
             _loggedErrorsOnce = false; //if we get here, no errors, reset error count so that errors will print again.
-            
+
             jewelcrafting:
             if (Jewelcrafting.API.IsLoaded() && Recycle_N_ReclaimPlugin.returnEnchantedResourcesReclaiming.Value == Recycle_N_ReclaimPlugin.Toggle.On)
             {

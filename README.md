@@ -16,6 +16,7 @@
 * Jewelcrafting (never worry about losing your gems again!)
 * EpicLoot (never worry about losing your enchanted items again!)
 * AzuExtendedPlayerInventory
+* Auga
 
 ---
 

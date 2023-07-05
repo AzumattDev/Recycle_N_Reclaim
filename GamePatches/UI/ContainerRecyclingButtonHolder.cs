@@ -53,7 +53,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         {
             if (_recycleAllButton != null)
                 return;
-            
+
             if (Recycle_N_ReclaimPlugin.HasAuga)
             {
                 _recycleAllButton = InventoryGui.instance.m_container.Find("RecycleAll").GetComponent<Button>();
@@ -63,9 +63,9 @@ namespace Recycle_N_Reclaim.GamePatches.UI
                 var newLocalPosition = GetSavedButtonPosition();
                 _recycleAllButton = Instantiate(InventoryGui.instance.m_takeAllButton, InventoryGui.instance.m_takeAllButton.transform);
                 _recycleAllButton.transform.SetParent(InventoryGui.instance.m_takeAllButton.transform.parent);
-                _recycleAllButton.transform.localPosition = newLocalPosition; 
+                _recycleAllButton.transform.localPosition = newLocalPosition;
             }
-            
+
             _recycleAllButton.onClick = new Button.ButtonClickedEvent();
             _recycleAllButton.onClick.AddListener(OnRecycleAllPressed);
             _textComponent = _recycleAllButton.GetComponentInChildren<Text>();

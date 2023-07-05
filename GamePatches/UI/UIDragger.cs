@@ -8,7 +8,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
     {
         public delegate void UIDroppedHandler(object source, Vector3 newLocalPosition);
 
-        public event UIDroppedHandler OnUIDropped;
+        public event UIDroppedHandler OnUIDropped = null!;
 
         private bool _isDragging;
 
