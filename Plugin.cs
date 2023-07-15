@@ -16,6 +16,7 @@ using Recycle_N_Reclaim.GamePatches.UI;
 using Recycle_N_Reclaim.YAMLStuff;
 using ServerSync;
 using UnityEngine;
+using LocalizationManager;
 
 namespace Recycle_N_Reclaim
 {
@@ -59,7 +60,7 @@ namespace Recycle_N_Reclaim
         {
             // Uncomment the line below to use the LocalizationManager for localizing your mod.
             // Make sure to populate the English.yml file in the translation folder with your keys to be localized and the values associated before uncommenting!.
-            //Localizer.Load(); // Use this to initialize the LocalizationManager (for more information on LocalizationManager, see the LocalizationManager documentation https://github.com/blaxxun-boop/LocalizationManager#example-project).
+            Localizer.Load(); // Use this to initialize the LocalizationManager (for more information on LocalizationManager, see the LocalizationManager documentation https://github.com/blaxxun-boop/LocalizationManager#example-project).
 
             _serverConfigLocked = config("1 - General", "Lock Configuration", Toggle.On, "If on, the configuration is locked and can be changed by server admins only.");
             _ = ConfigSyncVar.AddLockingConfigEntry(_serverConfigLocked);
@@ -297,6 +298,11 @@ namespace Recycle_N_Reclaim
         public static string Localize(string text)
         {
             return Localization.instance.Localize(text);
+        }
+
+        public static string Localize(string text, params string[] words)
+        {
+            return Localization.instance.Localize(text, words);
         }
 
         private void ContainerRecyclingTriggered()

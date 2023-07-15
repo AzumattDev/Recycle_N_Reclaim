@@ -86,13 +86,13 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             if (showPrefire)
             {
                 _prefired = true;
-                _textComponent.text = "Confirm!?";
+                _textComponent.text = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_confirm");
                 _imageComponent.color = new Color(1f, 0.5f, 0.5f);
             }
             else
             {
                 _prefired = false;
-                _textComponent.text = "Reclaim all";
+                _textComponent.text = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_reclaim_all");
                 _imageComponent.color = new Color(0.5f, 1f, 0.5f);
             }
         }
