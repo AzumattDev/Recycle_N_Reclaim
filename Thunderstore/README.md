@@ -18,6 +18,22 @@
 * AzuExtendedPlayerInventory
 * Auga
 
+### Localization
+
+Recycle_N_Reclaim (RNR) supports localization. This means that you can create language files for different languages.
+For example, to add a Swedish translation to this mod, a user could create a `Recycle_N_Reclaim.Swedish.yml` file inside
+of
+the config folder and add Swedish translations there.
+
+* The following languages in addition to English are translated for you already but might not be fully accurate:
+    * Russian
+    * Chinese
+    * French
+    * German
+    * Japanese
+    * Korean
+    * Spanish
+
 ---
 
 ## Original Author's Credits
@@ -425,6 +441,7 @@ containers:
 
 <img src="https://github.com/AzumattDev/Recycle_N_Reclaim/assets/80414405/102410f4-4b8a-4cd4-919e-421ddb33db38" alt="5B0B26B8-8064-421E-8888-6D40E71C56DC-min" width="100%" style="max-width: 1280px; height: auto;">
 <img src="https://github.com/AzumattDev/Recycle_N_Reclaim/assets/80414405/385e58d7-96d2-4546-8577-d612d804e194" alt="5B0B26B8-8064-421E-8888-6D40E71C56DC-min" width="100%" style="max-width: 1280px; height: auto;">
+<img src="https://github.com/AzumattDev/Recycle_N_Reclaim/assets/80414405/838b9ddd-9105-4478-9bf1-0b6c9859b4b5" alt="5B0B26B8-8064-421E-8888-6D40E71C56DC-min" width="100%" style="max-width: 1280px; height: auto;">
 
 
 `Feel free to reach out to me on discord if you need manual download assistance.`

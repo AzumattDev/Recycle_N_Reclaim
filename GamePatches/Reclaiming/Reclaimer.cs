@@ -39,10 +39,10 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             var stringBuilder = new StringBuilder();
             foreach (var analysisContext in analysisList.Where(analysis => analysis.RecyclingImpediments.Count > 0))
             {
-                stringBuilder.AppendLine(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_could_not_recycle", 
-                                                                          Recycle_N_ReclaimPlugin.Localize(analysisContext.Item.m_shared.m_name), 
-                                                                          analysisContext.RecyclingImpediments.Count.ToString()));
-                
+                stringBuilder.AppendLine(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_could_not_recycle",
+                    Recycle_N_ReclaimPlugin.Localize(analysisContext.Item.m_shared.m_name),
+                    analysisContext.RecyclingImpediments.Count.ToString()));
+
                 foreach (var impediment in analysisContext.RecyclingImpediments) stringBuilder.AppendLine(impediment);
             }
 
@@ -100,8 +100,8 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 || currentCraftingStation.GetLevel() < analysisContext.Item.m_quality)
             {
                 analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_recipe_requires",
-                                                                                          Recycle_N_ReclaimPlugin.Localize(recipeCraftingStation.m_name), 
-                                                                                          item.m_quality.ToString()));
+                    Recycle_N_ReclaimPlugin.Localize(recipeCraftingStation.m_name),
+                    item.m_quality.ToString()));
             }
         }
 
@@ -119,8 +119,8 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             if (analysisContext.Recipe.m_craftingStation?.m_name != null
                 && Recycle_N_ReclaimPlugin.StationFilterEnabled.Value == Recycle_N_ReclaimPlugin.Toggle.On
                 && Recycle_N_ReclaimPlugin.StationFilterList.Contains(global::Utils.GetPrefabName(analysisContext.Recipe.m_craftingStation.transform.root.gameObject)))
-                analysisContext.DisplayImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_item_from_station", 
-                                                                                        Recycle_N_ReclaimPlugin.Localize(analysisContext.Recipe.m_craftingStation.m_name) ));
+                analysisContext.DisplayImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_item_from_station",
+                    Recycle_N_ReclaimPlugin.Localize(analysisContext.Recipe.m_craftingStation.m_name)));
         }
 
         public static void DoInventoryChanges(RecyclingAnalysisContext analysisContext, Inventory inventory, Player player)
@@ -148,8 +148,8 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError(
                     "Inventory refused to add item after valid analysis! Check the error from the inventory for details. Will mark analysis for dumping.");
                 analysisContext.ShouldErrorDumpAnalysis = true;
-                analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_inventory_couldnt_add", 
-                                                                                          Recycle_N_ReclaimPlugin.Localize(entry.Prefab.name) ));
+                analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_inventory_couldnt_add",
+                    Recycle_N_ReclaimPlugin.Localize(entry.Prefab.name)));
             }
 
             if (inventory.RemoveItem(analysisContext.Item))
@@ -161,8 +161,8 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError(
                 "Inventory refused to remove item after valid analysis! Check the error from the inventory for details. Will mark analysis for dumping.");
             analysisContext.ShouldErrorDumpAnalysis = true;
-            analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_inventory_couldnt_remove", 
-                                                                                    Recycle_N_ReclaimPlugin.Localize(analysisContext.Item.m_shared.m_name) ));
+            analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_inventory_couldnt_remove",
+                Recycle_N_ReclaimPlugin.Localize(analysisContext.Item.m_shared.m_name)));
         }
 
         private static bool TryFindRecipeForItem(RecyclingAnalysisContext analysisContext, Player player)
@@ -176,7 +176,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             {
                 Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"Could not find a recipe for {item.m_shared.m_name}");
                 analysisContext.DisplayImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_couldnt_find_recipe",
-                                                                                        Recycle_N_ReclaimPlugin.Localize(item.m_shared.m_name) ));
+                    Recycle_N_ReclaimPlugin.Localize(item.m_shared.m_name)));
                 analysisContext.Recipe = null;
                 return false;
             }
@@ -223,22 +223,30 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
         {
             // based on assumption FindFreeStackSpace and FindEmptySlot are properly overridden
             bool haveEnoughSlots = true;
+            int emptySlots = 0;
+            double neededSlots = 0;
             foreach (var entry in analysisContext.Entries)
             {
                 ItemDrop.ItemData item = entry.Prefab.GetComponent<ItemDrop>().m_itemData;
-                if (inventory.FindFreeStackSpace(item.m_shared.m_name, item.m_worldLevel) < entry.Amount)
+                neededSlots += Math.Ceiling(entry.Amount / (double)item.m_shared.m_maxStackSize);
+                //if (inventory.FindFreeStackSpace(item.m_shared.m_name, item.m_worldLevel) < entry.Amount) // PTB related, can't use yet.
+                if (inventory.FindFreeStackSpace(item.m_shared.m_name) < entry.Amount)
                 {
                     if (inventory.FindEmptySlot(inventory.TopFirst(item)).x == -1)
                     {
                         haveEnoughSlots = false;
                         break;
                     }
+                    else
+                    {
+                        emptySlots++;
+                    }
                 }
             }
 
             if (haveEnoughSlots) return;
-
-            analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_not_enough_slots"));
+            string message = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_not_enough_slots", neededSlots.ToString(), emptySlots.ToString());
+            analysisContext.RecyclingImpediments.Add(message);
         }
 
 
@@ -271,8 +279,8 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 {
                     Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogWarning($"Could not find a prefab for {itemData.m_shared.m_name}! Won't be able to spawn items. You might want to report this!");
                     analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_coundnt_find_item",
-                                                                                              Recycle_N_ReclaimPlugin.Localize(itemData.m_shared.m_name), 
-                                                                                              itemData.m_shared.m_name));
+                        Recycle_N_ReclaimPlugin.Localize(itemData.m_shared.m_name),
+                        itemData.m_shared.m_name));
                     continue;
                 }
 
@@ -286,8 +294,8 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
 
                 if (Recycle_N_ReclaimPlugin.PreventZeroResourceYields.Value == Recycle_N_ReclaimPlugin.Toggle.On && finalAmount == 0 && !initialRecipeHadZero)
                 {
-                    analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_recylce_yield_none", 
-                                                                                              Recycle_N_ReclaimPlugin.Localize(resource.m_resItem.m_itemData.m_shared.m_name)));
+                    analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_recylce_yield_none",
+                        Recycle_N_ReclaimPlugin.Localize(resource.m_resItem.m_itemData.m_shared.m_name)));
                 }
             }
 

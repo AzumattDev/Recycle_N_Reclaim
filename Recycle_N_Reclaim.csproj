@@ -83,10 +83,6 @@
         <Reference Include="Jewelcrafting">
           <HintPath>Libs\Jewelcrafting.dll</HintPath>
         </Reference>
-        <Reference Include="LocalizationManager, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <SpecificVersion>False</SpecificVersion>
-          <HintPath>Libs\LocalizationManager.dll</HintPath>
-        </Reference>
         <Reference Include="ServerSync">
             <HintPath>Libs\ServerSync.dll</HintPath>
         </Reference>
@@ -150,9 +146,6 @@
         <Content Include="Libs\JewelcraftingAPI.dll">
           <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
-        <Content Include="Libs\LocalizationManager.dll">
-          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </Content>
         <Content Include="Libs\ServerSync.dll">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
@@ -164,6 +157,12 @@
         <EmbeddedResource Include="YAMLStuff\Example.yml" />
         <EmbeddedResource Include="translations\English.yml" />
         <EmbeddedResource Include="translations\Russian.yml" />
+        <EmbeddedResource Include="translations\Chinese.yml" />
+        <EmbeddedResource Include="translations\French.yml" />
+        <EmbeddedResource Include="translations\German.yml" />
+        <EmbeddedResource Include="translations\Japanese.yml" />
+        <EmbeddedResource Include="translations\Korean.yml" />
+        <EmbeddedResource Include="translations\Spanish.yml" />
         <Content Include="UpdateManifest.ps1" />
     </ItemGroup>
     <ItemGroup>

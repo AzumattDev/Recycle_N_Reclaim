@@ -17,6 +17,6 @@ azumatt_recycle_n_reclaim_inventory_couldnt_add: "Inventory could not add item $
 azumatt_recycle_n_reclaim_inventory_couldnt_remove: "Inventory could not remove item $1"
 azumatt_recycle_n_reclaim_couldnt_find_recipe: "Could not find a recipe for $1"
 azumatt_recycle_n_reclaim_recipe_not_known: "Recipe for $1 not known."
-azumatt_recycle_n_reclaim_not_enough_slots: "Not enough free slots in inventory"
+azumatt_recycle_n_reclaim_not_enough_slots: "Not enough free slots in inventory, need $1 have $2"
 azumatt_recycle_n_reclaim_coundnt_find_item: "Could not find item $1($2)"
 azumatt_recycle_n_reclaim_recylce_yield_none: "Recycling would yield 0 of $1"

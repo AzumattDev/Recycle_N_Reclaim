@@ -13,7 +13,7 @@ using JetBrains.Annotations;
 using UnityEngine;
 using YamlDotNet.Serialization;
 
-namespace Recycle_N_Reclaim.Managers;
+namespace LocalizationManager;
 
 [PublicAPI]
 public class Localizer
