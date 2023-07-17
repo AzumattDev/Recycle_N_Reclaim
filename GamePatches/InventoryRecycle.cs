@@ -62,7 +62,7 @@ public static class UpdateItemDragPatch
                         if (Recycle_N_ReclaimPlugin.returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off &&
                             (!isRecipeKnown || !isKnownMaterial))
                         {
-                            Player.m_localPlayer.Message(MessageHud.MessageType.Center, "You don't know all the recipes for this item's materials.");
+                            Player.m_localPlayer.Message(MessageHud.MessageType.Center, Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_no_material_recipes"));
                             return;
                         }
 
@@ -95,7 +95,7 @@ public static class UpdateItemDragPatch
 
                             if (Recycle_N_ReclaimPlugin.returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off && (!isRecipeKnown || !isKnownMaterial))
                             {
-                                Player.m_localPlayer.Message(MessageHud.MessageType.Center, "You don't know all the recipes for this item's materials.");
+                                Player.m_localPlayer.Message(MessageHud.MessageType.Center, Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_no_material_recipes"));
                                 return;
                             }
 
