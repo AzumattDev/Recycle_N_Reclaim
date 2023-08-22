@@ -229,8 +229,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             {
                 ItemDrop.ItemData item = entry.Prefab.GetComponent<ItemDrop>().m_itemData;
                 neededSlots += Math.Ceiling(entry.Amount / (double)item.m_shared.m_maxStackSize);
-                //if (inventory.FindFreeStackSpace(item.m_shared.m_name, item.m_worldLevel) < entry.Amount) // PTB related, can't use yet.
-                if (inventory.FindFreeStackSpace(item.m_shared.m_name) < entry.Amount)
+                if (inventory.FindFreeStackSpace(item.m_shared.m_name, item.m_worldLevel) < entry.Amount)
                 {
                     if (inventory.FindEmptySlot(inventory.TopFirst(item)).x == -1)
                     {
