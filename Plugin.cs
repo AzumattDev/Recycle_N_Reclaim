@@ -25,7 +25,7 @@ namespace Recycle_N_Reclaim
     public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
     {
         internal const string ModName = "Recycle_N_Reclaim";
-        internal const string ModVersion = "1.1.6";
+        internal const string ModVersion = "1.1.7";
         internal const string Author = "Azumatt";
         private const string ModGUID = Author + "." + ModName;
         private static string ConfigFileName = ModGUID + ".cfg";
@@ -195,11 +195,6 @@ namespace Recycle_N_Reclaim
             if (!Chainloader.PluginInfos.ContainsKey("randyknapp.mods.epicloot")) return;
             epicLootAssembly = Chainloader.PluginInfos["randyknapp.mods.epicloot"].Instance.GetType().Assembly;
             Recycle_N_ReclaimLogger.LogDebug("Epic Loot found, providing compatibility");
-            // Print all types found in epicLoot Assembly
-            foreach (var type in epicLootAssembly.GetTypes())
-            {
-                Recycle_N_ReclaimLogger.LogWarning($"EpicLoot Types: {type}");
-            }
         }
 
         private void AutoDoc()
