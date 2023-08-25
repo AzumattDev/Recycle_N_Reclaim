@@ -41,7 +41,7 @@ namespace Recycle_N_Reclaim.GamePatches
 
         private static void Postfix(ZNet __instance)
         {
-            ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.instance.GetServerPeerID(), "RNRRequestAdminSync",
+            ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.instance.GetServerPeerID(), $"{Recycle_N_ReclaimPlugin.ModName}RequestAdminSync",
                 new ZPackage());
         }
     }

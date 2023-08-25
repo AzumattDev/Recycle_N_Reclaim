@@ -145,11 +145,14 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                     continue;
                 }
 
-                Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError(
-                    "Inventory refused to add item after valid analysis! Check the error from the inventory for details. Will mark analysis for dumping.");
+                Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError("Inventory refused to add item after valid analysis! Check the error from the inventory for details. Will mark analysis for dumping.");
                 analysisContext.ShouldErrorDumpAnalysis = true;
                 analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_inventory_couldnt_add",
                     Recycle_N_ReclaimPlugin.Localize(entry.Prefab.name)));
+                if (analysisContext.ShouldErrorDumpAnalysis || Recycle_N_ReclaimPlugin.DebugAlwaysDumpAnalysisContext.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+                {
+                    analysisContext.Dump();
+                }
             }
 
             if (inventory.RemoveItem(analysisContext.Item))
@@ -163,6 +166,10 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             analysisContext.ShouldErrorDumpAnalysis = true;
             analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_inventory_couldnt_remove",
                 Recycle_N_ReclaimPlugin.Localize(analysisContext.Item.m_shared.m_name)));
+            if (analysisContext.ShouldErrorDumpAnalysis || Recycle_N_ReclaimPlugin.DebugAlwaysDumpAnalysisContext.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+            {
+                analysisContext.Dump();
+            }
         }
 
         private static bool TryFindRecipeForItem(RecyclingAnalysisContext analysisContext, Player player)
@@ -334,14 +341,14 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 var rarity = (int)UpdateItemDragPatch.getRarityMethod.Invoke(null, new object[] { itemData })!;
 
                 //Validate Existence of Method:
-                if (UpdateItemDragPatch.getEnchantCostsMethod == null)
-                {
-                    if (!_loggedErrorsOnce)
-                        Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError($"EpicLoot Loaded, but missing GetEnchantCosts() Method.");
+               //if (UpdateItemDragPatch.getEnchantCostsMethod == null)
+               //{
+               //    if (!_loggedErrorsOnce)
+               //        Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError($"EpicLoot Loaded, but missing GetEnchantCosts() Method.");
 
-                    _loggedErrorsOnce = true;
-                    goto jewelcrafting;
-                }
+               //    _loggedErrorsOnce = true;
+               //    goto jewelcrafting;
+               //}
 
                 List<KeyValuePair<ItemDrop, int>>? magicReqs =
                     (List<KeyValuePair<ItemDrop, int>>)UpdateItemDragPatch.getEnchantCostsMethod.Invoke(null, new object[] { itemData, rarity })!;

@@ -1,6 +1,6 @@
 {
   "name": "Recycle_N_Reclaim",
-  "version_number": "1.1.5",
+  "version_number": "1.1.6",
   "website_url": "https://discord.gg/pdHgy6Bsng",
   "description": "A mod that allows you to recycle items back into resources used to make them. Adds a 'Reclaim' tab/button to the crafting menu. Additionally can be used inside of your inventory directly.",
   "dependencies": [
