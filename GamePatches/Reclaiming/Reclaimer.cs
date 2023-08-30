@@ -341,17 +341,17 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 var rarity = (int)UpdateItemDragPatch.getRarityMethod.Invoke(null, new object[] { itemData })!;
 
                 //Validate Existence of Method:
-               //if (UpdateItemDragPatch.getEnchantCostsMethod == null)
-               //{
-               //    if (!_loggedErrorsOnce)
-               //        Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError($"EpicLoot Loaded, but missing GetEnchantCosts() Method.");
+                //if (UpdateItemDragPatch.getEnchantCostsMethod == null)
+                //{
+                //    if (!_loggedErrorsOnce)
+                //        Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError($"EpicLoot Loaded, but missing GetEnchantCosts() Method.");
 
-               //    _loggedErrorsOnce = true;
-               //    goto jewelcrafting;
-               //}
+                //    _loggedErrorsOnce = true;
+                //    goto jewelcrafting;
+                //}
 
                 List<KeyValuePair<ItemDrop, int>>? magicReqs =
-                    (List<KeyValuePair<ItemDrop, int>>)UpdateItemDragPatch.getEnchantCostsMethod.Invoke(null, new object[] { itemData, rarity })!;
+                    (List<KeyValuePair<ItemDrop, int>>)UpdateItemDragPatch.getEnchantCostsMethod?.Invoke(null, new object[] { itemData, rarity })!;
 
                 foreach (KeyValuePair<ItemDrop, int> kvp in magicReqs)
                 {
@@ -359,8 +359,11 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                     var isRecipeKnown = Player.m_localPlayer.IsRecipeKnown(kvp.Key.m_itemData.m_shared.m_name);
                     var isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(kvp.Key.m_itemData.m_shared.m_name);
 
-                    if (Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.Off &&
-                        (recipe2 == null || isRecipeKnown == false || isKnownMaterial == false))
+                    bool canRecycle = isKnownMaterial &&
+                                      (recipe2 == null ||
+                                       (isRecipeKnown && Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value != Recycle_N_ReclaimPlugin.Toggle.Off));
+
+                    if (!canRecycle)
                     {
                         var localizedItemName = Recycle_N_ReclaimPlugin.Localize(kvp.Key.m_itemData.m_shared.m_name);
                         var localizedString = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_recipe_not_known", localizedItemName ?? kvp.Key.m_itemData.m_shared.m_name);
@@ -418,7 +421,13 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                     var isRecipeKnown = Player.m_localPlayer?.IsRecipeKnown(gemItem.Value.m_shared.m_name);
                     var isKnownMaterial = Player.m_localPlayer?.m_knownMaterial.Contains(gemItem.Value.m_shared.m_name);
 
-                    if (Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.Off && (recipe == null || isRecipeKnown == false || isKnownMaterial == false))
+                    // Check if the item can be recycled based on your conditions
+                    bool canRecycle = isKnownMaterial.HasValue && isKnownMaterial.Value &&
+                                      (recipe == null ||
+                                       (isRecipeKnown.HasValue && isRecipeKnown.Value &&
+                                        Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value != Recycle_N_ReclaimPlugin.Toggle.Off));
+
+                    if (!canRecycle)
                     {
                         var localizedGemName = Recycle_N_ReclaimPlugin.Localize(gemItem.Value.m_shared.m_name);
                         var localizedString = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_recipe_not_known", localizedGemName ?? gemItem.Value.m_shared.m_name);
