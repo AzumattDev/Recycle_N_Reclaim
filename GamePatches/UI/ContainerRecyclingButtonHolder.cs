@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using TMPro;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace Recycle_N_Reclaim.GamePatches.UI
@@ -7,7 +8,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
     {
         private Button _recycleAllButton = null!;
         private bool _prefired;
-        private Text _textComponent = null!;
+        private TMP_Text _textComponent = null!;
         private Image _imageComponent = null!;
 
         public delegate void RecycleAllHandler();
@@ -68,7 +69,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
             _recycleAllButton.onClick = new Button.ButtonClickedEvent();
             _recycleAllButton.onClick.AddListener(OnRecycleAllPressed);
-            _textComponent = _recycleAllButton.GetComponentInChildren<Text>();
+            _textComponent = _recycleAllButton.GetComponentInChildren<TMP_Text>();
             _imageComponent = _recycleAllButton.GetComponentInChildren<Image>();
             var dragger = _recycleAllButton.gameObject.AddComponent<UIDragger>();
             dragger.OnUIDropped += (source, position) => { Recycle_N_ReclaimPlugin.ContainerRecyclingButtonPositionJsonString.Value = position; };

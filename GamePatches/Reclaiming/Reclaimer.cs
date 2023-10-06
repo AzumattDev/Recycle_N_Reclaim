@@ -356,8 +356,8 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 foreach (KeyValuePair<ItemDrop, int> kvp in magicReqs)
                 {
                     var recipe2 = ObjectDB.instance.GetRecipe(kvp.Key.m_itemData);
-                    var isRecipeKnown = Player.m_localPlayer.IsRecipeKnown(kvp.Key.m_itemData.m_shared.m_name);
-                    var isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(kvp.Key.m_itemData.m_shared.m_name);
+                    var isRecipeKnown = Player.m_localPlayer.IsRecipeKnown(kvp.Key.m_itemData.m_shared.m_name) || Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.On;
+                    var isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(kvp.Key.m_itemData.m_shared.m_name) || Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.On;
 
                     bool canRecycle = isKnownMaterial &&
                                       (recipe2 == null ||
@@ -418,13 +418,13 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 foreach (var gemItem in gemItemData)
                 {
                     var recipe = ObjectDB.instance?.GetRecipe(gemItem.Value);
-                    var isRecipeKnown = Player.m_localPlayer?.IsRecipeKnown(gemItem.Value.m_shared.m_name);
-                    var isKnownMaterial = Player.m_localPlayer?.m_knownMaterial.Contains(gemItem.Value.m_shared.m_name);
+                    var isRecipeKnown = Player.m_localPlayer.IsRecipeKnown(gemItem.Value.m_shared.m_name) || Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.On;
+                    var isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(gemItem.Value.m_shared.m_name) || Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.On;
 
                     // Check if the item can be recycled based on your conditions
-                    bool canRecycle = isKnownMaterial.HasValue && isKnownMaterial.Value &&
+                    bool canRecycle = isKnownMaterial &&
                                       (recipe == null ||
-                                       (isRecipeKnown.HasValue && isRecipeKnown.Value &&
+                                       (isRecipeKnown &&
                                         Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value != Recycle_N_ReclaimPlugin.Toggle.Off));
 
                     if (!canRecycle)

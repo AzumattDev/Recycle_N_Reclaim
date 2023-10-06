@@ -81,7 +81,7 @@
             <HintPath>$(BepInExPath)\core\BepInEx.dll</HintPath>
         </Reference>
         <Reference Include="Jewelcrafting">
-          <HintPath>Libs\Jewelcrafting.dll</HintPath>
+          <HintPath>Libs\JewelcraftingAPI.dll</HintPath>
         </Reference>
         <Reference Include="ServerSync">
             <HintPath>Libs\ServerSync.dll</HintPath>
@@ -113,6 +113,9 @@
         </Reference>
         <Reference Include="UnityEngine.UI">
             <HintPath>$(CorlibPath)\UnityEngine.UI.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.TextMeshPro">
+            <HintPath>$(GamePath)\valheim_Data\Managed\Unity.TextMeshPro.dll</HintPath>
         </Reference>
     </ItemGroup>
     <ItemGroup>
