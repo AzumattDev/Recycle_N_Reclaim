@@ -1,6 +1,4 @@
-﻿using System;
-using HarmonyLib;
-using UnityEngine;
+﻿using HarmonyLib;
 
 namespace Recycle_N_Reclaim.GamePatches.UI
 {
@@ -64,11 +62,14 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(Inventory), nameof(Inventory.Changed))]
-        static void InventorySave()
+        static void InventorySave(Inventory __instance)
         {
             if (Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder == null || !Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder.InRecycleTab()) return;
-            Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder.UpdateRecyclingList();
-            SetRecipe(InventoryGui.instance, -1, false);
+            if (__instance == Player.m_localPlayer.GetInventory())
+            {
+                Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder.UpdateRecyclingList();
+                InventoryGui.instance.SetRecipe(-1, false);
+            }
         }
 
         [HarmonyPostfix]
@@ -77,43 +78,11 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         static void HumanoidEquip(Humanoid __instance)
         {
             if (Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder == null || __instance != Player.m_localPlayer || !Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder.InRecycleTab()) return;
-            Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder.UpdateRecyclingList();
-            SetRecipe(InventoryGui.instance, -1, false);
-        }
-
-        [HarmonyReversePatch]
-        [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.SetRecipe), typeof(int), typeof(bool))]
-        public static void SetRecipe(this InventoryGui __instance, int index, bool center)
-        {
-            throw new NotImplementedException("stub");
-        }
-
-        [HarmonyReversePatch]
-        [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.GetSelectedRecipeIndex))]
-        public static int GetSelectedRecipeIndex(this InventoryGui __instance, bool acceptOneLevelHigher)
-        {
-            throw new NotImplementedException("stub");
-        }
-
-        [HarmonyReversePatch]
-        [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.OnSelectedRecipe), typeof(GameObject))]
-        public static void OnSelectedRecipe(this InventoryGui __instance, GameObject button)
-        {
-            throw new NotImplementedException("stub");
-        }
-
-        [HarmonyReversePatch]
-        [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.FindSelectedRecipe), typeof(GameObject))]
-        public static int FindSelectedRecipe(this InventoryGui __instance, GameObject button)
-        {
-            throw new NotImplementedException("stub");
-        }
-
-        [HarmonyReversePatch]
-        [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.UpdateCraftingPanel), typeof(bool))]
-        public static void UpdateCraftingPanel(this InventoryGui __instance, bool focusView)
-        {
-            throw new NotImplementedException("stub");
+            if (__instance.GetInventory() == Player.m_localPlayer.GetInventory())
+            {
+                Recycle_N_ReclaimPlugin.RecyclingTabButtonHolder.UpdateRecyclingList();
+                InventoryGui.instance.SetRecipe(-1, false);
+            }
         }
     }
 }

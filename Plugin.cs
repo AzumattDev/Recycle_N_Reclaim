@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
@@ -17,6 +15,7 @@ using Recycle_N_Reclaim.YAMLStuff;
 using ServerSync;
 using UnityEngine;
 using LocalizationManager;
+using Recycle_N_Reclaim.GamePatches.MarkAsTrash;
 
 namespace Recycle_N_Reclaim
 {
@@ -25,7 +24,7 @@ namespace Recycle_N_Reclaim
     public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
     {
         internal const string ModName = "Recycle_N_Reclaim";
-        internal const string ModVersion = "1.2.0";
+        internal const string ModVersion = "1.3.0";
         internal const string Author = "Azumatt";
         private const string ModGUID = Author + "." + ModName;
         private static string ConfigFileName = ModGUID + ".cfg";
@@ -58,6 +57,7 @@ namespace Recycle_N_Reclaim
 
         public void Awake()
         {
+            Game.isModded = true;
             // Uncomment the line below to use the LocalizationManager for localizing your mod.
             // Make sure to populate the English.yml file in the translation folder with your keys to be localized and the values associated before uncommenting!.
             Localizer.Load(); // Use this to initialize the LocalizationManager (for more information on LocalizationManager, see the LocalizationManager documentation https://github.com/blaxxun-boop/LocalizationManager#example-project).
@@ -67,18 +67,31 @@ namespace Recycle_N_Reclaim
 
 
             /* Inventory Discard */
+            var sectionName = "2 - Inventory Recycle";
             /* Discard Items in Inventory */
-            discardInvEnabled = config("2 - Inventory Recycle", "Enabled", Toggle.On, new ConfigDescription("If on, you'll be able to discard things inside of the player inventory.", null, new ConfigurationManagerAttributes { Order = 2 }));
-            lockToAdmin = config("2 - Inventory Recycle", "Lock to Admin", Toggle.On, new ConfigDescription("If on, only admin's can use this feature.", null, new ConfigurationManagerAttributes { Order = 1 }));
-            hotKey = config("2 - Inventory Recycle", "DiscardHotkey(s)", new KeyboardShortcut(KeyCode.Delete), new ConfigDescription("The hotkey to discard an item or regain resources. Must be enabled", new AcceptableShortcuts()), false);
-            returnUnknownResources = config("2 - Inventory Recycle", "ReturnUnknownResources", Toggle.Off, "If on, discarding an item in the inventory will return resources if recipe is unknown");
-            returnEnchantedResources = config("2 - Inventory Recycle", "ReturnEnchantedResources", Toggle.On, "If on and Epic Loot or Jewelcrafting is installed, discarding an item in the inventory will return resources for Epic Loot enchantments or Jewelcrafting gems");
-            returnResources = config("2 - Inventory Recycle", "ReturnResources", 1f, "Fraction of resources to return (0.0 - 1.0). This setting is forced to be between 0 and 1. Any higher or lower values will be set to 0 or 1 respectively.");
+            discardInvEnabled = config(sectionName, "Enabled", Toggle.On, new ConfigDescription("If on, you'll be able to discard things inside of the player inventory.", null, new ConfigurationManagerAttributes { Order = 2 }));
+            lockToAdmin = config(sectionName, "Lock to Admin", Toggle.On, new ConfigDescription("If on, only admin's can use this feature.", null, new ConfigurationManagerAttributes { Order = 1 }));
+            hotKey = config(sectionName, "DiscardHotkey(s)", new KeyboardShortcut(KeyCode.Delete), new ConfigDescription("The hotkey to discard an item or regain resources. Must be enabled", new AcceptableShortcuts()), false);
+            returnUnknownResources = config(sectionName, "ReturnUnknownResources", Toggle.Off, "If on, discarding an item in the inventory will return resources if recipe is unknown");
+            returnEnchantedResources = config(sectionName, "ReturnEnchantedResources", Toggle.On, "If on and Epic Loot or Jewelcrafting is installed, discarding an item in the inventory will return resources for Epic Loot enchantments or Jewelcrafting gems");
+            returnResources = config(sectionName, "ReturnResources", 1f, "Fraction of resources to return (0.0 - 1.0). This setting is forced to be between 0 and 1. Any higher or lower values will be set to 0 or 1 respectively.");
             returnResources.SettingChanged += (sender, args) =>
             {
                 if (returnResources.Value > 1.0f) returnResources.Value = 1.0f;
                 if (returnResources.Value < 0f) returnResources.Value = 0f;
             };
+
+            // Inventory MarkAsTrash
+            string TrashingKey = $"While this & right click are held, hovering over items marks them for trashing. Releasing this will cancel trashing for all items.";
+
+            BorderColorTrashedSlot = config(sectionName, nameof(BorderColorTrashedItem), new Color(1f, 0.0f, 0f), "Color of the border for slots containing Trashed items.", false);
+
+            
+            DisplayTooltipHint = config(sectionName, nameof(DisplayTooltipHint), true, "Whether to add additional info the item tooltip of a Trashed or trash flagged item.", false);
+
+            TrashingKeybind = config(sectionName, nameof(TrashingKeybind), new KeyboardShortcut(KeyCode.Mouse2), $"Key(s) that when pressed while holding your modifier key will trash all items marked as trash. Default setting is middle mouse click", false);
+            TrashingModifierKeybind1 = config(sectionName, nameof(TrashingModifierKeybind1), new KeyboardShortcut(KeyCode.RightAlt), $"{TrashingKey}.", false);
+            TrashedSlotTooltip = config(sectionName, nameof(TrashedSlotTooltip), "Slot is Trashed and will be a part of the bulk delete", string.Empty, false);
 
             /* Reclaiming */
             RecyclingRate = config("3 - Reclaiming", "RecyclingRate", 0.5f,
@@ -170,6 +183,7 @@ namespace Recycle_N_Reclaim
                 "If enabled, will spam recycling checks to the console.\n" +
                 "VERY. VERY. SPAMMY. Influences performance. ");
 
+
             if (!File.Exists(yamlPath))
             {
                 YAMLUtils.WriteConfigFileFromResource(yamlPath);
@@ -186,6 +200,7 @@ namespace Recycle_N_Reclaim
 
         private void Start()
         {
+            InventoryGridUpdateGuiPatch.border = loadSprite("trashingborder.png");
             AutoDoc();
             HasAuga = Auga.API.IsLoaded();
             _containerRecyclingButton = gameObject.AddComponent<ContainerRecyclingButtonHolder>();
@@ -195,6 +210,32 @@ namespace Recycle_N_Reclaim
             if (!Chainloader.PluginInfos.ContainsKey("randyknapp.mods.epicloot")) return;
             epicLootAssembly = Chainloader.PluginInfos["randyknapp.mods.epicloot"].Instance.GetType().Assembly;
             Recycle_N_ReclaimLogger.LogDebug("Epic Loot found, providing compatibility");
+        }
+
+        internal static Sprite loadSprite(string name)
+        {
+            Texture2D texture = loadTexture(name);
+            if (texture != null)
+            {
+                return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
+            }
+
+            return null!;
+        }
+
+        private static Texture2D loadTexture(string name)
+        {
+            Texture2D texture = new(0, 0);
+
+            texture.LoadImage(ReadEmbeddedFileBytes("Assets." + name));
+            return texture!;
+        }
+
+        private static byte[] ReadEmbeddedFileBytes(string name)
+        {
+            using MemoryStream stream = new();
+            Assembly.GetExecutingAssembly().GetManifestResourceStream(Assembly.GetExecutingAssembly().GetName().Name + "." + name)!.CopyTo(stream);
+            return stream.ToArray();
         }
 
         private void AutoDoc()
@@ -374,6 +415,16 @@ namespace Recycle_N_Reclaim
         public static ConfigEntry<Toggle> RequireExactCraftingStationForRecycling = null!;
         public static ConfigEntry<Toggle> returnEnchantedResourcesReclaiming = null!;
 
+        // Inventory MarkAsTrash
+
+
+        public static ConfigEntry<Color> BorderColorTrashedItem = null!;
+        public static ConfigEntry<Color> BorderColorTrashedSlot = null!;
+        public static ConfigEntry<bool> DisplayTooltipHint = null!;
+        public static ConfigEntry<KeyboardShortcut> TrashingModifierKeybind1 = null!;
+        public static ConfigEntry<KeyboardShortcut> TrashingKeybind = null!;
+        public static ConfigEntry<string> TrashedSlotTooltip = null!;
+
 
         private ConfigEntry<T> config<T>(string group, string name, T value, ConfigDescription description,
             bool synchronizedSetting = true)
@@ -420,5 +471,18 @@ namespace Recycle_N_Reclaim
         }
 
         #endregion
+    }
+
+    public static class KeyboardExtensions
+    {
+        public static bool IsKeyDown(this KeyboardShortcut shortcut)
+        {
+            return shortcut.MainKey != KeyCode.None && Input.GetKeyDown(shortcut.MainKey) && shortcut.Modifiers.All(Input.GetKey);
+        }
+
+        public static bool IsKeyHeld(this KeyboardShortcut shortcut)
+        {
+            return shortcut.MainKey != KeyCode.None && Input.GetKey(shortcut.MainKey) && shortcut.Modifiers.All(Input.GetKey);
+        }
     }
 }

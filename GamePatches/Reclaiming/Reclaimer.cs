@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Jewelcrafting;
 using Recycle_N_Reclaim.YAMLStuff;
 
 namespace Recycle_N_Reclaim.GamePatches.Recycling
@@ -39,9 +38,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             var stringBuilder = new StringBuilder();
             foreach (var analysisContext in analysisList.Where(analysis => analysis.RecyclingImpediments.Count > 0))
             {
-                stringBuilder.AppendLine(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_could_not_recycle",
-                    Recycle_N_ReclaimPlugin.Localize(analysisContext.Item.m_shared.m_name),
-                    analysisContext.RecyclingImpediments.Count.ToString()));
+                stringBuilder.AppendLine(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_could_not_recycle", Recycle_N_ReclaimPlugin.Localize(analysisContext.Item.m_shared.m_name), analysisContext.RecyclingImpediments.Count.ToString()));
 
                 foreach (var impediment in analysisContext.RecyclingImpediments) stringBuilder.AppendLine(impediment);
             }
@@ -99,9 +96,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 || currentCraftingStation.m_name != recipeCraftingStation.m_name
                 || currentCraftingStation.GetLevel() < analysisContext.Item.m_quality)
             {
-                analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_recipe_requires",
-                    Recycle_N_ReclaimPlugin.Localize(recipeCraftingStation.m_name),
-                    item.m_quality.ToString()));
+                analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_recipe_requires", Recycle_N_ReclaimPlugin.Localize(recipeCraftingStation.m_name), item.m_quality.ToString()));
             }
         }
 
@@ -129,10 +124,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
             foreach (var entry in analysisContext.Entries)
             {
                 if (entry is { Amount: 0, InitialRecipeHadZero: true }) continue;
-                var addedItem = inventory.AddItem(
-                    entry.Prefab.name, entry.Amount, entry.mQuality,
-                    entry.mVariant, player.GetPlayerID(), player.GetPlayerName()
-                );
+                var addedItem = inventory.AddItem(entry.Prefab.name, entry.Amount, entry.mQuality, entry.mVariant, player.GetPlayerID(), player.GetPlayerName());
                 if (addedItem != null)
                 {
                     Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"Added {entry.Amount} of {entry.Prefab.name}");
@@ -147,8 +139,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
 
                 Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError("Inventory refused to add item after valid analysis! Check the error from the inventory for details. Will mark analysis for dumping.");
                 analysisContext.ShouldErrorDumpAnalysis = true;
-                analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_inventory_couldnt_add",
-                    Recycle_N_ReclaimPlugin.Localize(entry.Prefab.name)));
+                analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_inventory_couldnt_add", Recycle_N_ReclaimPlugin.Localize(entry.Prefab.name)));
                 if (analysisContext.ShouldErrorDumpAnalysis || Recycle_N_ReclaimPlugin.DebugAlwaysDumpAnalysisContext.Value == Recycle_N_ReclaimPlugin.Toggle.On)
                 {
                     analysisContext.Dump();
@@ -161,11 +152,9 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
                 return;
             }
 
-            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError(
-                "Inventory refused to remove item after valid analysis! Check the error from the inventory for details. Will mark analysis for dumping.");
+            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError("Inventory refused to remove item after valid analysis! Check the error from the inventory for details. Will mark analysis for dumping.");
             analysisContext.ShouldErrorDumpAnalysis = true;
-            analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_inventory_couldnt_remove",
-                Recycle_N_ReclaimPlugin.Localize(analysisContext.Item.m_shared.m_name)));
+            analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_inventory_couldnt_remove", Recycle_N_ReclaimPlugin.Localize(analysisContext.Item.m_shared.m_name)));
             if (analysisContext.ShouldErrorDumpAnalysis || Recycle_N_ReclaimPlugin.DebugAlwaysDumpAnalysisContext.Value == Recycle_N_ReclaimPlugin.Toggle.On)
             {
                 analysisContext.Dump();

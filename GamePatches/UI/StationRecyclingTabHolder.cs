@@ -122,12 +122,12 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             if (igui.get_m_availableRecipes().Count > 0)
             {
                 if (igui.get_m_selectedRecipe().Key != null)
-                    InventoryGuiPatches.SetRecipe(igui, InventoryGuiPatches.GetSelectedRecipeIndex(igui, false), true);
+                    igui.SetRecipe(igui.GetSelectedRecipeIndex(false), true);
                 else
-                    InventoryGuiPatches.SetRecipe(igui, 0, true);
+                    igui.SetRecipe(0, true);
             }
             else
-                InventoryGuiPatches.SetRecipe(igui, -1, true);
+                InventoryGui.instance.SetRecipe(-1, true);
 
             if (Recycle_N_ReclaimPlugin.HasAuga)
             {
@@ -162,8 +162,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
             Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"Added {m_recipeList.Count} entries");
 
-            igui.m_recipeListRoot.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
-                Mathf.Max(igui.get_m_recipeListBaseSize(), m_recipeList.Count * igui.m_recipeListSpace));
+            igui.m_recipeListRoot.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Max(igui.get_m_recipeListBaseSize(), m_recipeList.Count * igui.m_recipeListSpace));
         }
 
         private void AddRecipeToList(RecyclingAnalysisContext context, List<GameObject> m_recipeList)
@@ -199,10 +198,9 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             component4.gameObject.SetActive(true);
             component4.text = context.Item.m_quality.ToString();
 
-            element.GetComponent<Button>().onClick.AddListener(() => InventoryGuiPatches.OnSelectedRecipe(igui, element));
+            element.GetComponent<Button>().onClick.AddListener(() => igui.OnSelectedRecipe(element));
             m_recipeList.Add(element);
-            igui.get_m_availableRecipes()
-                .Add(new KeyValuePair<Recipe, ItemDrop.ItemData>(context.Recipe, context.Item));
+            igui.get_m_availableRecipes().Add(new KeyValuePair<Recipe, ItemDrop.ItemData>(context.Recipe, context.Item));
         }
 
 
@@ -228,7 +226,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         public void UpdateRecipe(Player player, float dt)
         {
             var igui = InventoryGui.instance;
-            var selectedRecipeIndex = InventoryGuiPatches.GetSelectedRecipeIndex(igui, false);
+            var selectedRecipeIndex = igui.GetSelectedRecipeIndex(false);
 
             UpdateRecyclingAnalysisContexts(selectedRecipeIndex, player);
             UpdateCraftingStationUI(player);
@@ -303,9 +301,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             if (itemData != null)
             {
                 SetActive(igui.m_itemCraftType.gameObject, true);
-                igui.m_itemCraftType.text = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_reclaim_item_level",
-                    Recycle_N_ReclaimPlugin.Localize(itemData.m_shared.m_name),
-                    itemData.m_quality.ToString());
+                igui.m_itemCraftType.text = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_reclaim_item_level", Recycle_N_ReclaimPlugin.Localize(itemData.m_shared.m_name), itemData.m_quality.ToString());
             }
             else
                 SetActive(igui.m_itemCraftType.gameObject, false);
@@ -373,7 +369,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
                 {
                     Reclaimer.DoInventoryChanges(_recyclingAnalysisContexts[selectedRecipeIndex], player.GetInventory(), player);
                     igui.set_m_craftTimer(-1f);
-                    InventoryGuiPatches.SetRecipe(igui, -1, false);
+                    igui.SetRecipe(-1, false);
                     UpdateCraftingPanel();
                 }
             }
