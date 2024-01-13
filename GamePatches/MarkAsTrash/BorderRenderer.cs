@@ -9,7 +9,7 @@ namespace Recycle_N_Reclaim.GamePatches.MarkAsTrash
     static class InventoryGridUpdateGuiPatch
     {
         public static Sprite border = null!;
-        [HarmonyAfter("Azumatt.AzuAutoStore")]
+        [HarmonyAfter("Azumatt.AzuAutoStore", "goldenrevolver.quick_stack_store")]
         internal static void Postfix(Player player, Inventory ___m_inventory, List<InventoryGrid.Element> ___m_elements)
         {
             if (player == null || player.m_inventory != ___m_inventory)
