@@ -24,7 +24,7 @@ namespace Recycle_N_Reclaim
     public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
     {
         internal const string ModName = "Recycle_N_Reclaim";
-        internal const string ModVersion = "1.3.1";
+        internal const string ModVersion = "1.3.2";
         internal const string Author = "Azumatt";
         private const string ModGUID = Author + "." + ModName;
         private static string ConfigFileName = ModGUID + ".cfg";
@@ -90,7 +90,7 @@ namespace Recycle_N_Reclaim
             DisplayTooltipHint = config(sectionName, nameof(DisplayTooltipHint), true, "Whether to add additional info the item tooltip of a Trashed or trash flagged item.", false);
 
             TrashingKeybind = config(sectionName, nameof(TrashingKeybind), new KeyboardShortcut(KeyCode.Mouse2), $"Key(s) that when pressed while holding your modifier key will trash all items marked as trash. Default setting is middle mouse click", false);
-            TrashingModifierKeybind1 = config(sectionName, nameof(TrashingModifierKeybind1), new KeyboardShortcut(KeyCode.RightAlt), $"{TrashingKey}.", false);
+            TrashingModifierKeybind1 = config(sectionName, nameof(TrashingModifierKeybind1), new KeyboardShortcut(KeyCode.X), $"{TrashingKey}.", false);
             TrashedSlotTooltip = config(sectionName, nameof(TrashedSlotTooltip), "Slot is Trashed and will be a part of the bulk delete", string.Empty, false);
 
             /* Reclaiming */
