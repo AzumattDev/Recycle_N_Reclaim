@@ -11,7 +11,6 @@ namespace Recycle_N_Reclaim.GamePatches.MarkAsTrash
         public static Sprite border = null!;
 
         [HarmonyAfter("Azumatt.AzuAutoStore", "goldenrevolver.quick_stack_store")]
-        [HarmonyPriority(Priority.Low)]
         internal static void Postfix(Player player, Inventory ___m_inventory, List<InventoryGrid.Element> ___m_elements)
         {
             if (player == null || player.m_inventory != ___m_inventory)
@@ -99,6 +98,13 @@ namespace Recycle_N_Reclaim.GamePatches.MarkAsTrash
         {
             // set m_queued parent as parent first, so the position is correct
             Image? obj = Object.Instantiate(baseImg, baseImg.transform.parent);
+
+            // destroy all children of the newly created clone of m_queued image (as other mods add children to it too)
+            foreach (Transform child in obj.transform)
+            {
+                Object.Destroy(child.gameObject);
+            }
+
             // Set the name to something unique so we can find it later, and be compatible with other mods
             obj.name = "RecycleNReclaimBorderImage";
             // change the parent to the m_queued image so we can access the new image without a loop
