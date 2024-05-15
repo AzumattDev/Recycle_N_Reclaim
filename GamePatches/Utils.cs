@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Jewelcrafting;
 using Recycle_N_Reclaim.YAMLStuff;
 using UnityEngine;
 
@@ -73,7 +74,7 @@ public static class Utils
                 }
 
 
-                if (Jewelcrafting.API.IsLoaded() && Recycle_N_ReclaimPlugin.returnEnchantedResources.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+                if (API.IsLoaded() && Recycle_N_ReclaimPlugin.returnEnchantedResources.Value == Recycle_N_ReclaimPlugin.Toggle.On)
                 {
                     if (Jewelcrafting.API.GetGems(___m_dragItem).Any())
                     {
