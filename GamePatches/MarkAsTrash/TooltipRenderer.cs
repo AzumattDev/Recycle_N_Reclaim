@@ -13,7 +13,8 @@ namespace Recycle_N_Reclaim.GamePatches.MarkAsTrash
             typeof(ItemDrop.ItemData),
             typeof(int),
             typeof(bool),
-            typeof(float)
+            typeof(float),
+            typeof(int)
         })]
         [HarmonyPostfix]
         public static void GetTooltip(ItemDrop.ItemData item, bool crafting, ref string __result)

@@ -8,56 +8,52 @@ namespace Recycle_N_Reclaim.GamePatches.UI
     {
         public static float get_m_recipeListBaseSize(this InventoryGui instance)
         {
-            return (float)AccessTools.Field(typeof(InventoryGui), "m_recipeListBaseSize").GetValue(instance);
+            return instance.m_recipeListBaseSize;
         }
 
-        public static List<GameObject> get_m_recipeList(this InventoryGui instance)
+        public static List<InventoryGui.RecipeDataPair> get_m_recipeList(this InventoryGui instance)
         {
-            return (List<GameObject>)AccessTools.Field(typeof(InventoryGui), "m_recipeList").GetValue(instance);
+            return instance.m_availableRecipes;
         }
 
-        public static List<KeyValuePair<Recipe, ItemDrop.ItemData>> get_m_availableRecipes(this InventoryGui instance)
+        public static List<InventoryGui.RecipeDataPair> get_m_availableRecipes(this InventoryGui instance)
         {
-            return (List<KeyValuePair<Recipe, ItemDrop.ItemData>>)AccessTools.Field(typeof(InventoryGui),
-                "m_availableRecipes").GetValue(instance);
+            return instance.m_availableRecipes;
         }
 
-        public static KeyValuePair<Recipe, ItemDrop.ItemData> get_m_selectedRecipe(this InventoryGui instance)
+        public static InventoryGui.RecipeDataPair get_m_selectedRecipe(this InventoryGui instance)
         {
-            return (KeyValuePair<Recipe, ItemDrop.ItemData>)AccessTools.Field(typeof(InventoryGui), "m_selectedRecipe")
-                .GetValue(instance);
+            return instance.m_selectedRecipe;
         }
 
-        public static void set_m_selectedRecipe(this InventoryGui instance, KeyValuePair<Recipe, ItemDrop.ItemData> value)
+        public static void set_m_selectedRecipe(this InventoryGui instance, InventoryGui.RecipeDataPair value)
         {
-            AccessTools.Field(typeof(InventoryGui), "m_selectedRecipe")
-                .SetValue(instance, value);
+            instance.m_selectedRecipe = value;
         }
 
         public static int get_m_selectedVariant(this InventoryGui instance)
         {
-            return (int)AccessTools.Field(typeof(InventoryGui), "m_selectedVariant").GetValue(instance);
+            return instance.m_selectedVariant;
         }
 
         public static void set_m_selectedVariant(this InventoryGui instance, int value)
         {
-            AccessTools.Field(typeof(InventoryGui), "m_selectedVariant")
-                .SetValue(instance, value);
+            instance.m_selectedVariant = value;
         }
 
         public static float get_m_craftTimer(this InventoryGui instance)
         {
-            return (float)AccessTools.Field(typeof(InventoryGui), "m_craftTimer").GetValue(instance);
+            return instance.m_craftTimer;
         }
 
         public static void set_m_craftTimer(this InventoryGui instance, float value)
         {
-            AccessTools.Field(typeof(InventoryGui), "m_craftTimer").SetValue(instance, value);
+            instance.m_craftTimer = value;
         }
 
         public static Color get_m_minStationLevelBasecolor(this InventoryGui instance)
         {
-            return (Color)AccessTools.Field(typeof(InventoryGui), "m_minStationLevelBasecolor").GetValue(instance);
+            return instance.m_minStationLevelBasecolor;
         }
     }
 }

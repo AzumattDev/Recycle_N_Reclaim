@@ -119,9 +119,9 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
             UpdateRecyclingList();
 
-            if (igui.get_m_availableRecipes().Count > 0)
+            if (igui.m_availableRecipes.Count > 0)
             {
-                if (igui.get_m_selectedRecipe().Key != null)
+                if (igui.get_m_selectedRecipe().Recipe != null)
                     igui.SetRecipe(igui.GetSelectedRecipeIndex(false), true);
                 else
                     igui.SetRecipe(0, true);
@@ -131,7 +131,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
 
             if (Recycle_N_ReclaimPlugin.HasAuga)
             {
-                API.ComplexTooltip_SetItem(_itemInfoGo, igui.get_m_selectedRecipe().Value);
+                API.ComplexTooltip_SetItem(_itemInfoGo, igui.get_m_selectedRecipe().ItemData);
             }
         }
 
@@ -139,10 +139,9 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         {
             var localPlayer = Player.m_localPlayer;
             var igui = InventoryGui.instance;
-            igui.get_m_availableRecipes().Clear();
             var m_recipeList = igui.get_m_recipeList();
             Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"Old recipe list had {m_recipeList.Count} entries. Cleaning up");
-            foreach (var recipeElement in m_recipeList) Destroy(recipeElement);
+            foreach (var recipeElement in m_recipeList) Destroy(recipeElement.InterfaceElement);
             m_recipeList.Clear();
 
             _recyclingAnalysisContexts.Clear();
@@ -165,7 +164,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             igui.m_recipeListRoot.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Max(igui.get_m_recipeListBaseSize(), m_recipeList.Count * igui.m_recipeListSpace));
         }
 
-        private void AddRecipeToList(RecyclingAnalysisContext context, List<GameObject> m_recipeList)
+        private void AddRecipeToList(RecyclingAnalysisContext context, List<InventoryGui.RecipeDataPair> m_recipeList)
         {
             var count = m_recipeList.Count;
 
@@ -180,12 +179,11 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             var component2 = element.transform.Find("name").GetComponent<TMP_Text>();
             var str = Recycle_N_ReclaimPlugin.Localize(context.Item.m_shared.m_name);
             if (context.Item.m_stack > 1 && context.Item.m_shared.m_maxStackSize > 1)
-                str = str + " x" + context.Item.m_stack;
+                str = $"{str} x{context.Item.m_stack}";
             component2.text = str;
             component2.color = context.RecyclingImpediments.Count == 0 ? Color.white : new Color(0.66f, 0.66f, 0.66f, 1f);
             var component3 = element.transform.Find("Durability").GetComponent<GuiBar>();
-            if (context.Item.m_shared.m_useDurability &&
-                context.Item.m_durability < (double)context.Item.GetMaxDurability())
+            if (context.Item.m_shared.m_useDurability && context.Item.m_durability < (double)context.Item.GetMaxDurability())
             {
                 component3.gameObject.SetActive(true);
                 component3.SetValue(context.Item.GetDurabilityPercentage());
@@ -199,8 +197,11 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             component4.text = context.Item.m_quality.ToString();
 
             element.GetComponent<Button>().onClick.AddListener(() => igui.OnSelectedRecipe(element));
-            m_recipeList.Add(element);
-            igui.get_m_availableRecipes().Add(new KeyValuePair<Recipe, ItemDrop.ItemData>(context.Recipe, context.Item));
+            bool globalKey = ZoneSystem.instance.GetGlobalKey(GlobalKeys.NoCraftCost);
+            bool canCraft = igui.InCraftTab()
+                ? Player.m_localPlayer.HaveRequirements(context.Recipe, false, 1) | globalKey
+                : context.Item.m_quality < context.Item.m_shared.m_maxQuality && Player.m_localPlayer.HaveRequirements(context.Recipe, false, context.Item.m_quality + 1) | globalKey;
+            m_recipeList.Add(new InventoryGui.RecipeDataPair(context.Recipe, context.Item, element, canCraft));
         }
 
 
@@ -231,7 +232,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
             UpdateRecyclingAnalysisContexts(selectedRecipeIndex, player);
             UpdateCraftingStationUI(player);
 
-            if (igui.get_m_selectedRecipe().Key)
+            if (igui.get_m_selectedRecipe().Recipe)
             {
                 UpdateRecipeUI(selectedRecipeIndex, igui);
             }
@@ -278,15 +279,15 @@ namespace Recycle_N_Reclaim.GamePatches.UI
         private void UpdateRecipeUI(int selectedRecipeIndex, InventoryGui igui)
         {
             var analysisContext = _recyclingAnalysisContexts[selectedRecipeIndex];
-            var itemData = igui.get_m_selectedRecipe().Value;
+            var itemData = igui.get_m_selectedRecipe().ItemData;
             var num = itemData?.m_quality + 1 ?? 1;
 
             igui.m_recipeIcon.enabled = true;
             igui.m_recipeName.enabled = true;
             igui.m_recipeDecription.enabled = true;
 
-            igui.m_recipeIcon.sprite = igui.get_m_selectedRecipe().Key.m_item.m_itemData.m_shared.m_icons[itemData?.m_variant ?? igui.get_m_selectedVariant()];
-            string str = Recycle_N_ReclaimPlugin.Localize(igui.get_m_selectedRecipe().Key.m_item.m_itemData.m_shared.m_name);
+            igui.m_recipeIcon.sprite = igui.get_m_selectedRecipe().Recipe.m_item.m_itemData.m_shared.m_icons[itemData?.m_variant ?? igui.get_m_selectedVariant()];
+            string str = Recycle_N_ReclaimPlugin.Localize(igui.get_m_selectedRecipe().Recipe.m_item.m_itemData.m_shared.m_name);
             if (analysisContext.Item.m_stack > 1)
                 str = str + " x" + analysisContext.Item.m_stack;
             igui.m_recipeName.text = str;
@@ -316,7 +317,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
                 API.TooltipTextBox_AddLine(_descriptionBoxGo, igui.m_recipeDecription.text, true, true);
             }
 
-            SetActive(igui.m_variantButton.gameObject, igui.get_m_selectedRecipe().Key.m_item.m_itemData.m_shared.m_variants > 1 && igui.get_m_selectedRecipe().Value == null);
+            SetActive(igui.m_variantButton.gameObject, igui.get_m_selectedRecipe().Recipe.m_item.m_itemData.m_shared.m_variants > 1 && igui.get_m_selectedRecipe().ItemData == null);
 
             if (Recycle_N_ReclaimPlugin.epicLootAssembly == null)
             {

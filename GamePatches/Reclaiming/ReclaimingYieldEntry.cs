@@ -9,7 +9,7 @@ namespace Recycle_N_Reclaim.GamePatches.Recycling
     {
         public ItemDrop.ItemData Item;
 
-        public Recipe Recipe { get; set; }
+        public Recipe Recipe { get; set; } = null!;
         public List<string> RecyclingImpediments { get; } = new();
 
         public List<string> DisplayImpediments { get; } = new();
