@@ -112,7 +112,7 @@ public class Localizer
         }
     }
 
-    public static void Load() => LoadLocalization(Localization.instance, Localization.instance.GetSelectedLanguage());
+    public static void Load() => _ = plugin;
 
     private static void LoadLocalization(Localization __instance, string language)
     {
@@ -152,9 +152,9 @@ public class Localizer
         string? localizationData = null;
         if (language != "English")
         {
-            if (localizationFiles.ContainsKey(language))
+            if (localizationFiles.TryGetValue(language, out string? localizationFile))
             {
-                localizationData = File.ReadAllText(localizationFiles[language]);
+                localizationData = File.ReadAllText(localizationFile);
             }
             else if (LoadTranslationFromAssembly(language) is { } languageAssemblyData)
             {
@@ -162,9 +162,9 @@ public class Localizer
             }
         }
 
-        if (localizationData is null && localizationFiles.ContainsKey("English"))
+        if (localizationData is null && localizationFiles.TryGetValue("English", out string? localizationFile1))
         {
-            localizationData = File.ReadAllText(localizationFiles["English"]);
+            localizationData = File.ReadAllText(localizationFile1);
         }
 
         if (localizationData is not null)
@@ -185,7 +185,8 @@ public class Localizer
     static Localizer()
     {
         Harmony harmony = new("org.bepinex.helpers.LocalizationManager");
-        harmony.Patch(AccessTools.DeclaredMethod(typeof(Localization), nameof(Localization.LoadCSV)), postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(Localizer), nameof(LoadLocalization))));
+        harmony.Patch(AccessTools.DeclaredMethod(typeof(Localization), nameof(Localization.SetupLanguage)), postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(Localizer), nameof(LoadLocalization))));
+        harmony.Patch(AccessTools.DeclaredMethod(typeof(FejdStartup), nameof(FejdStartup.SetupGui)), postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(Localizer), nameof(LoadLocalization))));
     }
 
     private static byte[]? LoadTranslationFromAssembly(string language)

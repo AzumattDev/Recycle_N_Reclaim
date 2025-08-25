@@ -28,7 +28,7 @@ namespace Recycle_N_Reclaim
     public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
     {
         internal const string ModName = "Recycle_N_Reclaim";
-        internal const string ModVersion = "1.3.6";
+        internal const string ModVersion = "1.3.7";
         internal const string Author = "Azumatt";
         private const string ModGUID = Author + "." + ModName;
         private static string ConfigFileName = ModGUID + ".cfg";
@@ -61,11 +61,9 @@ namespace Recycle_N_Reclaim
 
         public void Awake()
         {
-            Game.isModded = true;
             // Uncomment the line below to use the LocalizationManager for localizing your mod.
             // Make sure to populate the English.yml file in the translation folder with your keys to be localized and the values associated before uncommenting!.
             Localizer.Load(); // Use this to initialize the LocalizationManager (for more information on LocalizationManager, see the LocalizationManager documentation https://github.com/blaxxun-boop/LocalizationManager#example-project).
-
             _serverConfigLocked = config("1 - General", "Lock Configuration", Toggle.On, "If on, the configuration is locked and can be changed by server admins only.");
             _ = ConfigSyncVar.AddLockingConfigEntry(_serverConfigLocked);
 
@@ -90,7 +88,7 @@ namespace Recycle_N_Reclaim
 
             BorderColorTrashedSlot = config(sectionName, nameof(BorderColorTrashedItem), new Color(1f, 0.0f, 0f), "Color of the border for slots containing Trashed items.", false);
 
-            
+
             DisplayTooltipHint = config(sectionName, nameof(DisplayTooltipHint), true, "Whether to add additional info the item tooltip of a Trashed or trash flagged item.", false);
 
             TrashingKeybind = config(sectionName, nameof(TrashingKeybind), new KeyboardShortcut(KeyCode.Mouse2), $"Key(s) that when pressed while holding your modifier key will trash all items marked as trash. Default setting is middle mouse click", false);
