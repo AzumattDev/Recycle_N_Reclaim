@@ -27,7 +27,7 @@ public static class UpdateItemDragPatch
             return;
 
         Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"Discarding {___m_dragAmount}/{___m_dragItem.m_stack} {___m_dragItem.m_dropPrefab.name}");
-        
+
         Utils.InventoryRecycleItem(___m_dragItem, ___m_dragAmount, ___m_dragInventory, __instance, ___m_dragGo);
 
         Object.Destroy(___m_dragGo);

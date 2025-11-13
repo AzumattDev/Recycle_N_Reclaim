@@ -2,114 +2,113 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Recycle_N_Reclaim.GamePatches.UI
+namespace Recycle_N_Reclaim.GamePatches.UI;
+
+public class ContainerRecyclingButtonHolder : MonoBehaviour
 {
-    public class ContainerRecyclingButtonHolder : MonoBehaviour
+    private Button _recycleAllButton = null!;
+    private bool _prefired;
+    private TMP_Text _textComponent = null!;
+    private Image _imageComponent = null!;
+
+    public delegate void RecycleAllHandler();
+
+    public event RecycleAllHandler OnRecycleAllTriggered = null!;
+
+    private void Start()
     {
-        private Button _recycleAllButton = null!;
-        private bool _prefired;
-        private TMP_Text _textComponent = null!;
-        private Image _imageComponent = null!;
+        InvokeRepeating(nameof(EnsureRecyclingButtonExistsIfPossible), 0f, 5f);
+    }
 
-        public delegate void RecycleAllHandler();
-
-        public event RecycleAllHandler OnRecycleAllTriggered = null!;
-
-        private void Start()
+    void EnsureRecyclingButtonExistsIfPossible()
+    {
+        if (InventoryGui.instance == null) return;
+        if (_recycleAllButton == null)
         {
-            InvokeRepeating(nameof(EnsureRecyclingButtonExistsIfPossible), 0f, 5f);
+            SetupButton();
         }
 
-        void EnsureRecyclingButtonExistsIfPossible()
-        {
-            if (InventoryGui.instance == null) return;
-            if (_recycleAllButton == null)
-            {
-                SetupButton();
-            }
+        _recycleAllButton.gameObject.SetActive(Recycle_N_ReclaimPlugin.ContainerRecyclingEnabled.Value == Recycle_N_ReclaimPlugin.Toggle.On);
+    }
 
-            _recycleAllButton.gameObject.SetActive(Recycle_N_ReclaimPlugin.ContainerRecyclingEnabled.Value == Recycle_N_ReclaimPlugin.Toggle.On);
+    private void OnDestroy()
+    {
+        try
+        {
+            Destroy(_recycleAllButton.gameObject);
+        }
+        catch
+        {
+            // ignored
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        if (Recycle_N_ReclaimPlugin.ContainerRecyclingEnabled.Value == Recycle_N_ReclaimPlugin.Toggle.Off) return;
+        if (_recycleAllButton == null) return;
+        if (!InventoryGui.instance.IsContainerOpen() && _prefired) SetButtonState(false);
+    }
+
+    private void SetupButton()
+    {
+        if (_recycleAllButton != null)
+            return;
+
+        if (Recycle_N_ReclaimPlugin.HasAuga)
+        {
+            _recycleAllButton = InventoryGui.instance.m_container.Find("RecycleAll").GetComponent<Button>();
+        }
+        else
+        {
+            var newLocalPosition = GetSavedButtonPosition();
+            _recycleAllButton = Instantiate(InventoryGui.instance.m_takeAllButton, InventoryGui.instance.m_takeAllButton.transform);
+            _recycleAllButton.transform.SetParent(InventoryGui.instance.m_takeAllButton.transform.parent);
+            _recycleAllButton.transform.localPosition = newLocalPosition;
         }
 
-        private void OnDestroy()
+        _recycleAllButton.onClick = new Button.ButtonClickedEvent();
+        _recycleAllButton.onClick.AddListener(OnRecycleAllPressed);
+        _textComponent = _recycleAllButton.GetComponentInChildren<TMP_Text>();
+        _imageComponent = _recycleAllButton.GetComponentInChildren<Image>();
+        var dragger = _recycleAllButton.gameObject.AddComponent<UIDragger>();
+        dragger.OnUIDropped += (source, position) => { Recycle_N_ReclaimPlugin.ContainerRecyclingButtonPositionJsonString.Value = position; };
+        SetButtonState(false);
+    }
+
+    private Vector3 GetSavedButtonPosition()
+    {
+        var newLocalPosition = Recycle_N_ReclaimPlugin.ContainerRecyclingButtonPositionJsonString.Value;
+        return newLocalPosition;
+    }
+
+    private void SetButtonState(bool showPrefire)
+    {
+        if (showPrefire)
         {
-            try
-            {
-                Destroy(_recycleAllButton.gameObject);
-            }
-            catch
-            {
-                // ignored
-            }
+            _prefired = true;
+            _textComponent.text = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_confirm");
+            _imageComponent.color = new Color(1f, 0.5f, 0.5f);
+        }
+        else
+        {
+            _prefired = false;
+            _textComponent.text = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_reclaim_all");
+            _imageComponent.color = new Color(0.5f, 1f, 0.5f);
+        }
+    }
+
+    private void OnRecycleAllPressed()
+    {
+        if (!Player.m_localPlayer)
+            return;
+        if (!_prefired)
+        {
+            SetButtonState(true);
+            return;
         }
 
-        private void FixedUpdate()
-        {
-            if (Recycle_N_ReclaimPlugin.ContainerRecyclingEnabled.Value == Recycle_N_ReclaimPlugin.Toggle.Off) return;
-            if (_recycleAllButton == null) return;
-            if (!InventoryGui.instance.IsContainerOpen() && _prefired) SetButtonState(false);
-        }
-
-        private void SetupButton()
-        {
-            if (_recycleAllButton != null)
-                return;
-
-            if (Recycle_N_ReclaimPlugin.HasAuga)
-            {
-                _recycleAllButton = InventoryGui.instance.m_container.Find("RecycleAll").GetComponent<Button>();
-            }
-            else
-            {
-                var newLocalPosition = GetSavedButtonPosition();
-                _recycleAllButton = Instantiate(InventoryGui.instance.m_takeAllButton, InventoryGui.instance.m_takeAllButton.transform);
-                _recycleAllButton.transform.SetParent(InventoryGui.instance.m_takeAllButton.transform.parent);
-                _recycleAllButton.transform.localPosition = newLocalPosition;
-            }
-
-            _recycleAllButton.onClick = new Button.ButtonClickedEvent();
-            _recycleAllButton.onClick.AddListener(OnRecycleAllPressed);
-            _textComponent = _recycleAllButton.GetComponentInChildren<TMP_Text>();
-            _imageComponent = _recycleAllButton.GetComponentInChildren<Image>();
-            var dragger = _recycleAllButton.gameObject.AddComponent<UIDragger>();
-            dragger.OnUIDropped += (source, position) => { Recycle_N_ReclaimPlugin.ContainerRecyclingButtonPositionJsonString.Value = position; };
-            SetButtonState(false);
-        }
-
-        private Vector3 GetSavedButtonPosition()
-        {
-            var newLocalPosition = Recycle_N_ReclaimPlugin.ContainerRecyclingButtonPositionJsonString.Value;
-            return newLocalPosition;
-        }
-
-        private void SetButtonState(bool showPrefire)
-        {
-            if (showPrefire)
-            {
-                _prefired = true;
-                _textComponent.text = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_confirm");
-                _imageComponent.color = new Color(1f, 0.5f, 0.5f);
-            }
-            else
-            {
-                _prefired = false;
-                _textComponent.text = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_reclaim_all");
-                _imageComponent.color = new Color(0.5f, 1f, 0.5f);
-            }
-        }
-
-        private void OnRecycleAllPressed()
-        {
-            if (!Player.m_localPlayer)
-                return;
-            if (!_prefired)
-            {
-                SetButtonState(true);
-                return;
-            }
-
-            SetButtonState(false);
-            OnRecycleAllTriggered?.Invoke();
-        }
+        SetButtonState(false);
+        OnRecycleAllTriggered?.Invoke();
     }
 }

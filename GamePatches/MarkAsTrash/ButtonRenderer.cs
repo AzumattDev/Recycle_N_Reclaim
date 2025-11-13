@@ -1,32 +1,31 @@
 ﻿using UnityEngine.UI;
 
-namespace Recycle_N_Reclaim.GamePatches.MarkAsTrash
+namespace Recycle_N_Reclaim.GamePatches.MarkAsTrash;
+
+internal class ButtonRenderer
 {
-    internal class ButtonRenderer
-    {
-        internal static bool hasOpenedInventoryOnce = false;
+    internal static bool hasOpenedInventoryOnce = false;
         
-        internal static Button TrashingTogglingButton = null!;
+    internal static Button TrashingTogglingButton = null!;
 
-        internal class MainButtonUpdate
+    internal class MainButtonUpdate
+    {
+        internal static void UpdateInventoryGuiButtons(InventoryGui __instance)
         {
-            internal static void UpdateInventoryGuiButtons(InventoryGui __instance)
+            if (!hasOpenedInventoryOnce)
             {
-                if (!hasOpenedInventoryOnce)
-                {
-                    return;
-                }
+                return;
+            }
 
-                if (__instance != InventoryGui.instance)
-                {
-                    return;
-                }
+            if (__instance != InventoryGui.instance)
+            {
+                return;
+            }
 
-                if (Player.m_localPlayer)
-                {
-                    // reset in case player forgot to turn it off
-                    TrashingMode.HasCurrentlyToggledTrashing = false;
-                }
+            if (Player.m_localPlayer)
+            {
+                // reset in case player forgot to turn it off
+                TrashingMode.HasCurrentlyToggledTrashing = false;
             }
         }
     }

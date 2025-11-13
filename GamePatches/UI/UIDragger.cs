@@ -2,34 +2,33 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace Recycle_N_Reclaim.GamePatches.UI
+namespace Recycle_N_Reclaim.GamePatches.UI;
+
+public class UIDragger : EventTrigger
 {
-    public class UIDragger : EventTrigger
+    public delegate void UIDroppedHandler(object source, Vector3 newLocalPosition);
+
+    public event UIDroppedHandler OnUIDropped = null!;
+
+    private bool _isDragging;
+
+    public void Update()
     {
-        public delegate void UIDroppedHandler(object source, Vector3 newLocalPosition);
+        if (!_isDragging) return;
+        transform.position = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+    }
 
-        public event UIDroppedHandler OnUIDropped = null!;
+    public override void OnPointerDown(PointerEventData eventData)
+    {
+        if (eventData.button != PointerEventData.InputButton.Right || !Input.GetKey(KeyCode.LeftControl)) return;
+        _isDragging = true;
+    }
 
-        private bool _isDragging;
-
-        public void Update()
-        {
-            if (!_isDragging) return;
-            transform.position = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
-        }
-
-        public override void OnPointerDown(PointerEventData eventData)
-        {
-            if (eventData.button != PointerEventData.InputButton.Right || !Input.GetKey(KeyCode.LeftControl)) return;
-            _isDragging = true;
-        }
-
-        [SuppressMessage("ReSharper", "Unity.InefficientPropertyAccess")]
-        public override void OnPointerUp(PointerEventData eventData)
-        {
-            if (eventData.button != PointerEventData.InputButton.Right) return;
-            _isDragging = false;
-            OnUIDropped?.Invoke(this, new Vector3(transform.localPosition.x, transform.localPosition.y, -1f));
-        }
+    [SuppressMessage("ReSharper", "Unity.InefficientPropertyAccess")]
+    public override void OnPointerUp(PointerEventData eventData)
+    {
+        if (eventData.button != PointerEventData.InputButton.Right) return;
+        _isDragging = false;
+        OnUIDropped?.Invoke(this, new Vector3(transform.localPosition.x, transform.localPosition.y, -1f));
     }
 }
