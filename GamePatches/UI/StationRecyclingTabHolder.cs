@@ -2,6 +2,7 @@
 using System.Linq;
 using Auga;
 using Recycle_N_Reclaim.GamePatches.Recycling;
+using Recycle_N_Reclaim.YAMLStuff;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -152,7 +153,7 @@ namespace Recycle_N_Reclaim.GamePatches.UI
                                   // require to many checks and workarounds
                                   // so it makes more sense to just filter them out completely 
                                   && context.DisplayImpediments.Count == 0);
-            _recyclingAnalysisContexts.AddRange(validRecycles);
+            _recyclingAnalysisContexts.AddRange(validRecycles.Where(x=> !GroupUtils.IsPrefabExcludedInReclaiming(x.Item.m_dropPrefab.name)));
             foreach (var context in _recyclingAnalysisContexts)
             {
                 if (context.Recipe == null) continue;

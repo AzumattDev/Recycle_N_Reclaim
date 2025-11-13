@@ -101,7 +101,7 @@
             <HintPath>$(CorlibPath)\UnityEngine.CoreModule.dll</HintPath>
         </Reference>
         <Reference Include="UnityEngine.ImageConversionModule">
-            <HintPath>$(CorlibPath)\UnityEngine.ImageConversionModule.dll</HintPath>
+            <HintPath>C:\Users\crypt\OneDrive\Desktop\Libs\UnityEngine.ImageConversionModule.dll</HintPath>
         </Reference>
         <Reference Include="UnityEngine.IMGUIModule">
             <HintPath>$(CorlibPath)\UnityEngine.IMGUIModule.dll</HintPath>

@@ -32,6 +32,11 @@ public static class Utils
 
     public static void InventoryRecycleItem(ItemDrop.ItemData ___m_dragItem, int ___m_dragAmount, Inventory ___m_dragInventory, InventoryGui __instance, GameObject ___m_dragGo)
     {
+        if (GroupUtils.IsPrefabExcludedInInventory(___m_dragItem.m_dropPrefab.name))
+        {
+            Player.m_localPlayer.Message(MessageHud.MessageType.Center, $"{___m_dragItem.m_dropPrefab.name} is blocked via ExcludeLists.yml file [inventory excludes]");
+            return;
+        }
         if (Recycle_N_ReclaimPlugin.returnResources.Value > 0)
         {
             Recipe recipe = ObjectDB.instance.GetRecipe(___m_dragItem);
