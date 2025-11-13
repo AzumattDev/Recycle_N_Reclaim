@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Recycle_N_Reclaim.YAMLStuff;
-
-namespace Recycle_N_Reclaim.GamePatches.Recycling;
+﻿namespace Recycle_N_Reclaim.GamePatches.Recycling;
 
 public static class Reclaimer
 {
@@ -23,13 +17,13 @@ public static class Reclaimer
             analysisList.Add(analysisContext);
             // log the container name and prefab name
             var prefabName = global::Utils.GetPrefabName(item.m_dropPrefab);
-            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"containerName: {containerName}, prefabName: {prefabName}");
+            Recycle_N_ReclaimLogger.LogDebug($"containerName: {containerName}, prefabName: {prefabName}");
             if (!GroupUtils.IsPrefabExcludedInContainer(containerName, prefabName))
             {
                 RecycleOneItemInInventory(analysisContext, inventory, player);
             }
 
-            if (analysisContext.ShouldErrorDumpAnalysis || Recycle_N_ReclaimPlugin.DebugAlwaysDumpAnalysisContext.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+            if (analysisContext.ShouldErrorDumpAnalysis || DebugAlwaysDumpAnalysisContext.Value == Recycle_N_ReclaimPlugin.Toggle.On)
             {
                 analysisContext.Dump();
             }
@@ -38,12 +32,12 @@ public static class Reclaimer
         var stringBuilder = new StringBuilder();
         foreach (var analysisContext in analysisList.Where(analysis => analysis.RecyclingImpediments.Count > 0))
         {
-            stringBuilder.AppendLine(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_could_not_recycle", Recycle_N_ReclaimPlugin.Localize(analysisContext.Item.m_shared.m_name), analysisContext.RecyclingImpediments.Count.ToString()));
+            stringBuilder.AppendLine(Localize("$azumatt_recycle_n_reclaim_could_not_recycle", Localize(analysisContext.Item.m_shared.m_name), analysisContext.RecyclingImpediments.Count.ToString()));
 
             foreach (var impediment in analysisContext.RecyclingImpediments) stringBuilder.AppendLine(impediment);
         }
 
-        if (stringBuilder.Length == 0 || Recycle_N_ReclaimPlugin.NotifyOnSalvagingImpediments.Value == Recycle_N_ReclaimPlugin.Toggle.Off) return;
+        if (stringBuilder.Length == 0 || NotifyOnSalvagingImpediments.Value == Recycle_N_ReclaimPlugin.Toggle.Off) return;
         MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, stringBuilder.ToString());
     }
 
@@ -86,14 +80,14 @@ public static class Reclaimer
 
     private static void AnalyzeCraftingStationRequirements(RecyclingAnalysisContext analysisContext, Player player)
     {
-        if (Recycle_N_ReclaimPlugin.RequireExactCraftingStationForRecycling.Value == Recycle_N_ReclaimPlugin.Toggle.Off) return;
+        if (RequireExactCraftingStationForRecycling.Value == Recycle_N_ReclaimPlugin.Toggle.Off) return;
         var recipeCraftingStation = analysisContext.Recipe.m_craftingStation;
         if (recipeCraftingStation == null) return;
         var currentCraftingStation = Player.m_localPlayer.GetCurrentCraftingStation();
         var item = analysisContext.Item;
         if (currentCraftingStation == null || currentCraftingStation.m_name != recipeCraftingStation.m_name || currentCraftingStation.GetLevel() < analysisContext.Item.m_quality)
         {
-            analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_recipe_requires", Recycle_N_ReclaimPlugin.Localize(recipeCraftingStation.m_name), item.m_quality.ToString()));
+            analysisContext.RecyclingImpediments.Add(Localize("$azumatt_recycle_n_reclaim_recipe_requires", Localize(recipeCraftingStation.m_name), item.m_quality.ToString()));
         }
     }
 
@@ -102,42 +96,42 @@ public static class Reclaimer
     {
         if (player.GetInventory() != inventory) return;
 
-        if (analysisContext.Item.m_equipped && Recycle_N_ReclaimPlugin.HideEquippedItemsInRecyclingTab.Value == Recycle_N_ReclaimPlugin.Toggle.On)
-            analysisContext.DisplayImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_item_equipped"));
+        if (analysisContext.Item.m_equipped && HideEquippedItemsInRecyclingTab.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+            analysisContext.DisplayImpediments.Add(Localize("$azumatt_recycle_n_reclaim_item_equipped"));
 
-        if (analysisContext.Item.m_gridPos.y == 0 && Recycle_N_ReclaimPlugin.IgnoreItemsOnHotbar.Value == Recycle_N_ReclaimPlugin.Toggle.On)
-            analysisContext.DisplayImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_item_on_hotbar"));
+        if (analysisContext.Item.m_gridPos.y == 0 && IgnoreItemsOnHotbar.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+            analysisContext.DisplayImpediments.Add(Localize("$azumatt_recycle_n_reclaim_item_on_hotbar"));
 
         if (analysisContext.Recipe.m_craftingStation?.m_name != null
-            && Recycle_N_ReclaimPlugin.StationFilterEnabled.Value == Recycle_N_ReclaimPlugin.Toggle.On
-            && Recycle_N_ReclaimPlugin.StationFilterList.Contains(global::Utils.GetPrefabName(analysisContext.Recipe.m_craftingStation.transform.root.gameObject)))
-            analysisContext.DisplayImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_item_from_station",
-                Recycle_N_ReclaimPlugin.Localize(analysisContext.Recipe.m_craftingStation.m_name)));
+            && StationFilterEnabled.Value == Recycle_N_ReclaimPlugin.Toggle.On
+            && StationFilterList.Contains(global::Utils.GetPrefabName(analysisContext.Recipe.m_craftingStation.transform.root.gameObject)))
+            analysisContext.DisplayImpediments.Add(Localize("$azumatt_recycle_n_reclaim_item_from_station",
+                Localize(analysisContext.Recipe.m_craftingStation.m_name)));
     }
 
     public static void DoInventoryChanges(RecyclingAnalysisContext analysisContext, Inventory inventory, Player player)
     {
-        Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug("Inventory changes requested");
+        Recycle_N_ReclaimLogger.LogDebug("Inventory changes requested");
         foreach (var entry in analysisContext.Entries)
         {
             if (entry is { Amount: 0, InitialRecipeHadZero: true }) continue;
             var addedItem = inventory.AddItem(entry.Prefab.name, entry.Amount, entry.mQuality, entry.mVariant, player.GetPlayerID(), player.GetPlayerName());
             if (addedItem != null)
             {
-                Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"Added {entry.Amount} of {entry.Prefab.name}");
+                Recycle_N_ReclaimLogger.LogDebug($"Added {entry.Amount} of {entry.Prefab.name}");
                 continue;
             }
 
-            if (entry.Amount < 1 && Recycle_N_ReclaimPlugin.PreventZeroResourceYields.Value == Recycle_N_ReclaimPlugin.Toggle.Off)
+            if (entry.Amount < 1 && PreventZeroResourceYields.Value == Recycle_N_ReclaimPlugin.Toggle.Off)
             {
-                Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug("Adding item failed, but player disabled zero resource yields prevention, item loss expected. ");
+                Recycle_N_ReclaimLogger.LogDebug("Adding item failed, but player disabled zero resource yields prevention, item loss expected. ");
                 continue;
             }
 
-            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError("Inventory refused to add item after valid analysis! Check the error from the inventory for details. Will mark analysis for dumping.");
+            Recycle_N_ReclaimLogger.LogError("Inventory refused to add item after valid analysis! Check the error from the inventory for details. Will mark analysis for dumping.");
             analysisContext.ShouldErrorDumpAnalysis = true;
-            analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_inventory_couldnt_add", Recycle_N_ReclaimPlugin.Localize(entry.Prefab.name)));
-            if (analysisContext.ShouldErrorDumpAnalysis || Recycle_N_ReclaimPlugin.DebugAlwaysDumpAnalysisContext.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+            analysisContext.RecyclingImpediments.Add(Localize("$azumatt_recycle_n_reclaim_inventory_couldnt_add", Localize(entry.Prefab.name)));
+            if (analysisContext.ShouldErrorDumpAnalysis || DebugAlwaysDumpAnalysisContext.Value == Recycle_N_ReclaimPlugin.Toggle.On)
             {
                 analysisContext.Dump();
             }
@@ -145,14 +139,14 @@ public static class Reclaimer
 
         if (inventory.RemoveItem(analysisContext.Item))
         {
-            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"Removed item {analysisContext.Item.m_shared.m_name}");
+            Recycle_N_ReclaimLogger.LogDebug($"Removed item {analysisContext.Item.m_shared.m_name}");
             return;
         }
 
-        Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError("Inventory refused to remove item after valid analysis! Check the error from the inventory for details. Will mark analysis for dumping.");
+        Recycle_N_ReclaimLogger.LogError("Inventory refused to remove item after valid analysis! Check the error from the inventory for details. Will mark analysis for dumping.");
         analysisContext.ShouldErrorDumpAnalysis = true;
-        analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_inventory_couldnt_remove", Recycle_N_ReclaimPlugin.Localize(analysisContext.Item.m_shared.m_name)));
-        if (analysisContext.ShouldErrorDumpAnalysis || Recycle_N_ReclaimPlugin.DebugAlwaysDumpAnalysisContext.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+        analysisContext.RecyclingImpediments.Add(Localize("$azumatt_recycle_n_reclaim_inventory_couldnt_remove", Localize(analysisContext.Item.m_shared.m_name)));
+        if (analysisContext.ShouldErrorDumpAnalysis || DebugAlwaysDumpAnalysisContext.Value == Recycle_N_ReclaimPlugin.Toggle.On)
         {
             analysisContext.Dump();
         }
@@ -167,9 +161,9 @@ public static class Reclaimer
             .ToList();
         if (foundRecipes.Count == 0)
         {
-            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"Could not find a recipe for {item.m_shared.m_name}");
-            analysisContext.DisplayImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_couldnt_find_recipe",
-                Recycle_N_ReclaimPlugin.Localize(item.m_shared.m_name)));
+            Recycle_N_ReclaimLogger.LogDebug($"Could not find a recipe for {item.m_shared.m_name}");
+            analysisContext.DisplayImpediments.Add(Localize("$azumatt_recycle_n_reclaim_couldnt_find_recipe",
+                Localize(item.m_shared.m_name)));
             analysisContext.Recipe = null;
             return false;
         }
@@ -201,9 +195,9 @@ public static class Reclaimer
         }
 
         analysisContext.Recipe = foundRecipes.FirstOrDefault()!;
-        if (!player.IsRecipeKnown(analysisContext.Recipe.m_item.m_itemData.m_shared.m_name) && Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.Off)
+        if (!player.IsRecipeKnown(analysisContext.Recipe.m_item.m_itemData.m_shared.m_name) && AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.Off)
         {
-            var localizedString = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_recipe_not_known", Recycle_N_ReclaimPlugin.Localize(item.m_shared.m_name));
+            var localizedString = Localize("$azumatt_recycle_n_reclaim_recipe_not_known", Localize(item.m_shared.m_name));
             analysisContext.RecyclingImpediments.Add(localizedString);
         }
 
@@ -235,14 +229,14 @@ public static class Reclaimer
         }
 
         if (haveEnoughSlots) return;
-        string message = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_not_enough_slots", neededSlots.ToString(), emptySlots.ToString());
+        string message = Localize("$azumatt_recycle_n_reclaim_not_enough_slots", neededSlots.ToString(), emptySlots.ToString());
         analysisContext.RecyclingImpediments.Add(message);
     }
 
 
     private static void AnalyzeMaterialYieldForItem(RecyclingAnalysisContext analysisContext)
     {
-        var recyclingRate = Recycle_N_ReclaimPlugin.RecyclingRate.Value;
+        var recyclingRate = RecyclingRate.Value;
         var itemData = analysisContext.Item;
         var recipe = analysisContext.Recipe;
 
@@ -267,9 +261,9 @@ public static class Reclaimer
 
             if (preFab == null)
             {
-                Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogWarning($"Could not find a prefab for {itemData.m_shared.m_name}! Won't be able to spawn items. You might want to report this!");
-                analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_coundnt_find_item",
-                    Recycle_N_ReclaimPlugin.Localize(itemData.m_shared.m_name),
+                Recycle_N_ReclaimLogger.LogWarning($"Could not find a prefab for {itemData.m_shared.m_name}! Won't be able to spawn items. You might want to report this!");
+                analysisContext.RecyclingImpediments.Add(Localize("$azumatt_recycle_n_reclaim_coundnt_find_item",
+                    Localize(itemData.m_shared.m_name),
                     itemData.m_shared.m_name));
                 continue;
             }
@@ -282,15 +276,15 @@ public static class Reclaimer
                 analysisContext.Entries.Add(new RecyclingAnalysisContext.ReclaimingYieldEntry(preFab, rItemData, finalAmount, rItemData.m_quality, rItemData.m_variant, initialRecipeHadZero));
             }
 
-            if (Recycle_N_ReclaimPlugin.PreventZeroResourceYields.Value == Recycle_N_ReclaimPlugin.Toggle.On && finalAmount == 0 && !initialRecipeHadZero)
+            if (PreventZeroResourceYields.Value == Recycle_N_ReclaimPlugin.Toggle.On && finalAmount == 0 && !initialRecipeHadZero)
             {
-                analysisContext.RecyclingImpediments.Add(Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_recylce_yield_none",
-                    Recycle_N_ReclaimPlugin.Localize(resource.m_resItem.m_itemData.m_shared.m_name)));
+                analysisContext.RecyclingImpediments.Add(Localize("$azumatt_recycle_n_reclaim_recylce_yield_none",
+                    Localize(resource.m_resItem.m_itemData.m_shared.m_name)));
             }
         }
 
 
-        if (Recycle_N_ReclaimPlugin.epicLootAssembly == null)
+        if (epicLootAssembly == null)
         {
             goto jewelcrafting;
         }
@@ -301,13 +295,13 @@ public static class Reclaimer
         if (UpdateItemDragPatch.isMagicMethod == null)
         {
             if (!_loggedErrorsOnce)
-                Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError($"EpicLoot Loaded, but missing IsMagic() Method.");
+                Recycle_N_ReclaimLogger.LogError($"EpicLoot Loaded, but missing IsMagic() Method.");
 
             _loggedErrorsOnce = true;
             goto jewelcrafting;
         }
 
-        if (Recycle_N_ReclaimPlugin.returnEnchantedResourcesReclaiming.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+        if (returnEnchantedResourcesReclaiming.Value == Recycle_N_ReclaimPlugin.Toggle.On)
             isMagic = (bool)UpdateItemDragPatch.isMagicMethod.Invoke(null, new object[] { itemData })!;
 
         if (isMagic)
@@ -316,7 +310,7 @@ public static class Reclaimer
             if (UpdateItemDragPatch.getRarityMethod == null)
             {
                 if (!_loggedErrorsOnce)
-                    Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError($"EpicLoot Loaded, but missing GetRarity() Method.");
+                    Recycle_N_ReclaimLogger.LogError($"EpicLoot Loaded, but missing GetRarity() Method.");
                 _loggedErrorsOnce = true;
 
                 goto jewelcrafting;
@@ -340,17 +334,17 @@ public static class Reclaimer
             foreach (KeyValuePair<ItemDrop, int> kvp in magicReqs)
             {
                 var recipe2 = ObjectDB.instance.GetRecipe(kvp.Key.m_itemData);
-                var isRecipeKnown = Player.m_localPlayer.IsRecipeKnown(kvp.Key.m_itemData.m_shared.m_name) || Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.On;
-                var isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(kvp.Key.m_itemData.m_shared.m_name) || Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.On;
+                var isRecipeKnown = Player.m_localPlayer.IsRecipeKnown(kvp.Key.m_itemData.m_shared.m_name) || AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.On;
+                var isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(kvp.Key.m_itemData.m_shared.m_name) || AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.On;
 
                 bool canRecycle = isKnownMaterial &&
                                   (recipe2 == null ||
-                                   (isRecipeKnown && Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value != Recycle_N_ReclaimPlugin.Toggle.Off));
+                                   (isRecipeKnown && AllowRecyclingUnknownRecipes.Value != Recycle_N_ReclaimPlugin.Toggle.Off));
 
                 if (!canRecycle)
                 {
-                    var localizedItemName = Recycle_N_ReclaimPlugin.Localize(kvp.Key.m_itemData.m_shared.m_name);
-                    var localizedString = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_recipe_not_known", localizedItemName ?? kvp.Key.m_itemData.m_shared.m_name);
+                    var localizedItemName = Localize(kvp.Key.m_itemData.m_shared.m_name);
+                    var localizedString = Localize("$azumatt_recycle_n_reclaim_recipe_not_known", localizedItemName ?? kvp.Key.m_itemData.m_shared.m_name);
                     analysisContext.RecyclingImpediments.Add(localizedString);
                     return;
                 }
@@ -376,7 +370,7 @@ public static class Reclaimer
         _loggedErrorsOnce = false; //if we get here, no errors, reset error count so that errors will print again.
 
         jewelcrafting:
-        if (Jewelcrafting.API.IsLoaded() && Recycle_N_ReclaimPlugin.returnEnchantedResourcesReclaiming.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+        if (Jewelcrafting.API.IsLoaded() && returnEnchantedResourcesReclaiming.Value == Recycle_N_ReclaimPlugin.Toggle.On)
         {
             CheckJewelCrafting(analysisContext);
         }
@@ -402,19 +396,19 @@ public static class Reclaimer
             foreach (var gemItem in gemItemData)
             {
                 var recipe = ObjectDB.instance?.GetRecipe(gemItem.Value);
-                var isRecipeKnown = Player.m_localPlayer.IsRecipeKnown(gemItem.Value.m_shared.m_name) || Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.On;
-                var isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(gemItem.Value.m_shared.m_name) || Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.On;
+                var isRecipeKnown = Player.m_localPlayer.IsRecipeKnown(gemItem.Value.m_shared.m_name) || AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.On;
+                var isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(gemItem.Value.m_shared.m_name) || AllowRecyclingUnknownRecipes.Value == Recycle_N_ReclaimPlugin.Toggle.On;
 
                 // Check if the item can be recycled based on your conditions
                 bool canRecycle = isKnownMaterial &&
                                   (recipe == null ||
                                    (isRecipeKnown &&
-                                    Recycle_N_ReclaimPlugin.AllowRecyclingUnknownRecipes.Value != Recycle_N_ReclaimPlugin.Toggle.Off));
+                                    AllowRecyclingUnknownRecipes.Value != Recycle_N_ReclaimPlugin.Toggle.Off));
 
                 if (!canRecycle)
                 {
-                    var localizedGemName = Recycle_N_ReclaimPlugin.Localize(gemItem.Value.m_shared.m_name);
-                    var localizedString = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_recipe_not_known", localizedGemName ?? gemItem.Value.m_shared.m_name);
+                    var localizedGemName = Localize(gemItem.Value.m_shared.m_name);
+                    var localizedString = Localize("$azumatt_recycle_n_reclaim_recipe_not_known", localizedGemName ?? gemItem.Value.m_shared.m_name);
                     recyclingAnalysisContext.RecyclingImpediments.Add(localizedString);
                     return;
                 }
@@ -460,14 +454,14 @@ public static class Reclaimer
         result.Amount = (int)realAmount;
 
         if (realAmount < 1 && itemData.m_shared.m_maxStackSize == 1
-                           && Recycle_N_ReclaimPlugin.UnstackableItemsAlwaysReturnAtLeastOneResource.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+                           && UnstackableItemsAlwaysReturnAtLeastOneResource.Value == Recycle_N_ReclaimPlugin.Toggle.On)
         {
             result.Amount = 1;
         }
 
-        if (Recycle_N_ReclaimPlugin.DebugAllowSpammyLogs.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+        if (DebugAllowSpammyLogs.Value == Recycle_N_ReclaimPlugin.Toggle.On)
         {
-            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug("Calculations report.\n" +
+            Recycle_N_ReclaimLogger.LogDebug("Calculations report.\n" +
                                                                      $" = = = {resource.m_resItem.m_itemData.m_shared.m_name} - " +
                                                                      $"REA:{resource.m_amount} APLS: {amountPerLevelSum} IQ:{itemData.m_quality} " +
                                                                      $"STK:{itemData.m_stack}({itemData.m_shared.m_maxStackSize}) SC:{stackCompensated} " +

@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using HarmonyLib;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using Object = UnityEngine.Object;
 
 namespace Recycle_N_Reclaim.GamePatches.MarkAsTrash;
 
@@ -39,13 +36,13 @@ static class InventoryGridUpdateGuiPatch
 
                 if (img != null)
                 {
-                    img.color = Recycle_N_ReclaimPlugin.BorderColorTrashedSlot.Value;
+                    img.color = BorderColorTrashedSlot.Value;
                     img.enabled = playerConfig.IsSlotTrashed(new Vector2i(x, y));
                 }
             }
         }
 
-        if (Recycle_N_ReclaimPlugin.TrashingModifierKeybind1.Value.IsKeyHeld() && Recycle_N_ReclaimPlugin.TrashingKeybind.Value.IsKeyDown())
+        if (TrashingModifierKeybind1.Value.IsKeyHeld() && TrashingKeybind.Value.IsKeyDown())
         {
             List<ItemDrop.ItemData> itemsToRecycle = new List<ItemDrop.ItemData>();
             List<ItemDrop.ItemData>? list = ___m_inventory.GetAllItems();
@@ -61,11 +58,11 @@ static class InventoryGridUpdateGuiPatch
             for (int index = 0; index < itemsToRecycle.Count; ++index)
             {
                 ItemDrop.ItemData? itemData = itemsToRecycle[index];
-                Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"Recycling item at grid position {itemData.m_gridPos}");
+                Recycle_N_ReclaimLogger.LogDebug($"Recycling item at grid position {itemData.m_gridPos}");
                 Utils.InventoryRecycleItem(itemData, itemData.m_stack, ___m_inventory, null, null);
             }
 
-            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug("Resetting all MarkAsTrash data!");
+            Recycle_N_ReclaimLogger.LogDebug("Resetting all MarkAsTrash data!");
             UserConfig.ResetAllTrashing();
         }
 
@@ -86,7 +83,7 @@ static class InventoryGridUpdateGuiPatch
             UserConfig.ResetAllTrashing();
         }*/
 
-        if (!Recycle_N_ReclaimPlugin.TrashingModifierKeybind1.Value.IsKeyHeld())
+        if (!TrashingModifierKeybind1.Value.IsKeyHeld())
         {
             // reset in case player forgot to turn it off
             TrashingMode.HasCurrentlyToggledTrashing = false;

@@ -1,8 +1,4 @@
-﻿using TMPro;
-using UnityEngine;
-using UnityEngine.UI;
-
-namespace Recycle_N_Reclaim.GamePatches.UI;
+﻿namespace Recycle_N_Reclaim.GamePatches.UI;
 
 public class ContainerRecyclingButtonHolder : MonoBehaviour
 {
@@ -28,7 +24,7 @@ public class ContainerRecyclingButtonHolder : MonoBehaviour
             SetupButton();
         }
 
-        _recycleAllButton.gameObject.SetActive(Recycle_N_ReclaimPlugin.ContainerRecyclingEnabled.Value == Recycle_N_ReclaimPlugin.Toggle.On);
+        _recycleAllButton.gameObject.SetActive(ContainerRecyclingEnabled.Value == Recycle_N_ReclaimPlugin.Toggle.On);
     }
 
     private void OnDestroy()
@@ -45,7 +41,7 @@ public class ContainerRecyclingButtonHolder : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (Recycle_N_ReclaimPlugin.ContainerRecyclingEnabled.Value == Recycle_N_ReclaimPlugin.Toggle.Off) return;
+        if (ContainerRecyclingEnabled.Value == Recycle_N_ReclaimPlugin.Toggle.Off) return;
         if (_recycleAllButton == null) return;
         if (!InventoryGui.instance.IsContainerOpen() && _prefired) SetButtonState(false);
     }
@@ -55,7 +51,7 @@ public class ContainerRecyclingButtonHolder : MonoBehaviour
         if (_recycleAllButton != null)
             return;
 
-        if (Recycle_N_ReclaimPlugin.HasAuga)
+        if (HasAuga)
         {
             _recycleAllButton = InventoryGui.instance.m_container.Find("RecycleAll").GetComponent<Button>();
         }
@@ -72,13 +68,13 @@ public class ContainerRecyclingButtonHolder : MonoBehaviour
         _textComponent = _recycleAllButton.GetComponentInChildren<TMP_Text>();
         _imageComponent = _recycleAllButton.GetComponentInChildren<Image>();
         var dragger = _recycleAllButton.gameObject.AddComponent<UIDragger>();
-        dragger.OnUIDropped += (source, position) => { Recycle_N_ReclaimPlugin.ContainerRecyclingButtonPositionJsonString.Value = position; };
+        dragger.OnUIDropped += (source, position) => { ContainerRecyclingButtonPositionJsonString.Value = position; };
         SetButtonState(false);
     }
 
     private Vector3 GetSavedButtonPosition()
     {
-        var newLocalPosition = Recycle_N_ReclaimPlugin.ContainerRecyclingButtonPositionJsonString.Value;
+        var newLocalPosition = ContainerRecyclingButtonPositionJsonString.Value;
         return newLocalPosition;
     }
 
@@ -87,13 +83,13 @@ public class ContainerRecyclingButtonHolder : MonoBehaviour
         if (showPrefire)
         {
             _prefired = true;
-            _textComponent.text = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_confirm");
+            _textComponent.text = Localize("$azumatt_recycle_n_reclaim_confirm");
             _imageComponent.color = new Color(1f, 0.5f, 0.5f);
         }
         else
         {
             _prefired = false;
-            _textComponent.text = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_reclaim_all");
+            _textComponent.text = Localize("$azumatt_recycle_n_reclaim_reclaim_all");
             _imageComponent.color = new Color(0.5f, 1f, 0.5f);
         }
     }

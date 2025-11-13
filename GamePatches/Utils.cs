@@ -1,9 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Jewelcrafting;
-using Recycle_N_Reclaim.YAMLStuff;
-using UnityEngine;
+﻿using Jewelcrafting;
 
 namespace Recycle_N_Reclaim.GamePatches;
 
@@ -38,19 +33,19 @@ public static class Utils
             return;
         }
 
-        if (Recycle_N_ReclaimPlugin.returnResources.Value > 0)
+        if (returnResources.Value > 0)
         {
             Recipe recipe = ObjectDB.instance.GetRecipe(___m_dragItem);
 
-            if (recipe != null && (Recycle_N_ReclaimPlugin.returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.On || Player.m_localPlayer.IsRecipeKnown(___m_dragItem.m_shared.m_name)))
+            if (recipe != null && (returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.On || Player.m_localPlayer.IsRecipeKnown(___m_dragItem.m_shared.m_name)))
             {
-                Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"Recipe stack: {recipe.m_amount} num of stacks: {___m_dragAmount / recipe.m_amount}");
+                Recycle_N_ReclaimLogger.LogDebug($"Recipe stack: {recipe.m_amount} num of stacks: {___m_dragAmount / recipe.m_amount}");
 
                 List<Piece.Requirement>? reqs = recipe.m_resources.ToList();
 
                 bool isMagic = false;
                 bool cancel = false;
-                if (Recycle_N_ReclaimPlugin.epicLootAssembly != null && Recycle_N_ReclaimPlugin.returnEnchantedResources.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+                if (epicLootAssembly != null && returnEnchantedResources.Value == Recycle_N_ReclaimPlugin.Toggle.On)
                     isMagic = (bool)UpdateItemDragPatch.isMagicMethod?.Invoke(null, new[] { ___m_dragItem });
 
                 if (isMagic)
@@ -64,10 +59,10 @@ public static class Utils
                         bool isRecipeKnown = recipe2 != null && Player.m_localPlayer.IsRecipeKnown(kvp.Key.m_itemData.m_shared.m_name);
                         bool isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(kvp.Key.m_itemData.m_shared.m_name);
 
-                        if (Recycle_N_ReclaimPlugin.returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off &&
+                        if (returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off &&
                             (!isRecipeKnown || !isKnownMaterial))
                         {
-                            Player.m_localPlayer.Message(MessageHud.MessageType.Center, Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_no_material_recipes"));
+                            Player.m_localPlayer.Message(MessageHud.MessageType.Center, Localize("$azumatt_recycle_n_reclaim_no_material_recipes"));
                             return;
                         }
 
@@ -80,11 +75,11 @@ public static class Utils
                 }
 
 
-                if (API.IsLoaded() && Recycle_N_ReclaimPlugin.returnEnchantedResources.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+                if (API.IsLoaded() && returnEnchantedResources.Value == Recycle_N_ReclaimPlugin.Toggle.On)
                 {
-                    if (Jewelcrafting.API.GetGems(___m_dragItem).Any())
+                    if (API.GetGems(___m_dragItem).Any())
                     {
-                        var gemsOnItem = Jewelcrafting.API.GetGems(___m_dragItem);
+                        var gemsOnItem = API.GetGems(___m_dragItem);
 
                         Dictionary<ItemDrop, ItemDrop.ItemData> gemItemData = gemsOnItem
                             .Where(gem => gem != null)
@@ -98,9 +93,9 @@ public static class Utils
                             bool isRecipeKnown = recipe3 != null && Player.m_localPlayer.IsRecipeKnown(gemItem.Value.m_shared.m_name);
                             bool isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(gemItem.Value.m_shared.m_name);
 
-                            if (Recycle_N_ReclaimPlugin.returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off && (!isRecipeKnown || !isKnownMaterial))
+                            if (returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off && (!isRecipeKnown || !isKnownMaterial))
                             {
-                                Player.m_localPlayer.Message(MessageHud.MessageType.Center, Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_no_material_recipes"));
+                                Player.m_localPlayer.Message(MessageHud.MessageType.Center, Localize("$azumatt_recycle_n_reclaim_no_material_recipes"));
                                 return;
                             }
 
@@ -123,8 +118,8 @@ public static class Utils
                             {
                                 GameObject prefab = ObjectDB.instance.m_items.FirstOrDefault(item => item.GetComponent<ItemDrop>().m_itemData.m_shared.m_name == req.m_resItem.m_itemData.m_shared.m_name)!;
                                 ItemDrop.ItemData newItem = prefab.GetComponent<ItemDrop>().m_itemData.Clone();
-                                int numToAdd = Mathf.RoundToInt(req.GetAmount(j) * Recycle_N_ReclaimPlugin.returnResources.Value);
-                                Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug(($"Returning {numToAdd}/{req.GetAmount(j)} {prefab.name}"));
+                                int numToAdd = Mathf.RoundToInt(req.GetAmount(j) * returnResources.Value);
+                                Recycle_N_ReclaimLogger.LogDebug(($"Returning {numToAdd}/{req.GetAmount(j)} {prefab.name}"));
 
                                 while (numToAdd > 0)
                                 {

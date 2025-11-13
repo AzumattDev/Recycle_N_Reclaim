@@ -1,17 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
-using BepInEx;
+﻿using System.Runtime.CompilerServices;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
-using HarmonyLib;
 using JetBrains.Annotations;
-using UnityEngine;
-using YamlDotNet.Serialization;
 
 namespace LocalizationManager;
 

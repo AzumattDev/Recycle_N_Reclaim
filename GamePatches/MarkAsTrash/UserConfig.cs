@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using BepInEx;
 
 namespace Recycle_N_Reclaim.GamePatches.MarkAsTrash;
 
@@ -32,7 +27,7 @@ public class UserConfig
     /// </summary>
     public UserConfig(long uid)
     {
-        _configPath = Path.Combine(Paths.ConfigPath, $"{Recycle_N_ReclaimPlugin.ModName}_player_{uid}.dat");
+        _configPath = Path.Combine(Paths.ConfigPath, $"{ModName}_player_{uid}.dat");
         Load();
     }
 

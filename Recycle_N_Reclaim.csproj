@@ -144,6 +144,7 @@
         <Compile Include="GamePatches\ObjectDumper.cs"/>
         <Compile Include="GamePatches\Utils.cs"/>
         <Compile Include="GamePatches\VersionHandshake.cs"/>
+        <Compile Include="GlobalUsings.cs" />
         <Compile Include="Managers\LocalizationManager.cs"/>
         <Compile Include="Plugin.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Text;
-using HarmonyLib;
-using UnityEngine;
-
-namespace Recycle_N_Reclaim.GamePatches.MarkAsTrash;
+﻿namespace Recycle_N_Reclaim.GamePatches.MarkAsTrash;
 
 [HarmonyPatch(typeof(ItemDrop.ItemData))]
 internal static class TooltipRenderer
@@ -19,7 +14,7 @@ internal static class TooltipRenderer
     [HarmonyPostfix]
     public static void GetTooltip(ItemDrop.ItemData item, bool crafting, ref string __result)
     {
-        if (crafting || !Recycle_N_ReclaimPlugin.DisplayTooltipHint.Value)
+        if (crafting || !DisplayTooltipHint.Value)
         {
             return;
         }
@@ -31,9 +26,9 @@ internal static class TooltipRenderer
 
         if (conf.IsSlotTrashed(item.m_gridPos))
         {
-            string? color = ColorUtility.ToHtmlStringRGB(Recycle_N_ReclaimPlugin.BorderColorTrashedSlot.Value);
+            string? color = ColorUtility.ToHtmlStringRGB(BorderColorTrashedSlot.Value);
 
-            stringBuilder.Append($"{Environment.NewLine}<color=#{color}>{Recycle_N_ReclaimPlugin.TrashedSlotTooltip.Value}</color>");
+            stringBuilder.Append($"{Environment.NewLine}<color=#{color}>{TrashedSlotTooltip.Value}</color>");
         }
 
         __result = stringBuilder.ToString();

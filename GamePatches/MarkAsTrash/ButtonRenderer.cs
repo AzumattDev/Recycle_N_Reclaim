@@ -1,6 +1,4 @@
-﻿using UnityEngine.UI;
-
-namespace Recycle_N_Reclaim.GamePatches.MarkAsTrash;
+﻿namespace Recycle_N_Reclaim.GamePatches.MarkAsTrash;
 
 internal class ButtonRenderer
 {

@@ -1,9 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
-
-namespace Recycle_N_Reclaim.GamePatches.Recycling;
+﻿namespace Recycle_N_Reclaim.GamePatches.Recycling;
 
 public class RecyclingAnalysisContext
 {
@@ -33,12 +28,12 @@ public class RecyclingAnalysisContext
 
         public ReclaimingYieldEntry(GameObject prefab, ItemDrop.ItemData itemData, int amount, int mQuality, int mVariant, bool initialRecipeHadZero)
         {
-            this.Prefab = prefab;
-            this.RecipeItemData = itemData;
-            this.Amount = amount;
+            Prefab = prefab;
+            RecipeItemData = itemData;
+            Amount = amount;
             this.mQuality = mQuality;
             this.mVariant = mVariant;
-            this.InitialRecipeHadZero = initialRecipeHadZero;
+            InitialRecipeHadZero = initialRecipeHadZero;
         }
     }
 
@@ -65,7 +60,7 @@ public class RecyclingAnalysisContext
         sb.AppendLine("\n==== Dump of recycling analysis was requested ====");
         sb.AppendLine(ObjectDumper.Dump(dumpObject));
         sb.AppendLine("==== Dump ends here ====");
-        Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError(sb.ToString());
+        Recycle_N_ReclaimLogger.LogError(sb.ToString());
     }
 
     private dynamic GetRecipeObject()

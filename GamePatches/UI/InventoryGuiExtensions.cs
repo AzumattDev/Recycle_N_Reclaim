@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using HarmonyLib;
-using UnityEngine;
-
-namespace Recycle_N_Reclaim.GamePatches.UI;
+﻿namespace Recycle_N_Reclaim.GamePatches.UI;
 
 public static class InventoryGuiExtensions
 {

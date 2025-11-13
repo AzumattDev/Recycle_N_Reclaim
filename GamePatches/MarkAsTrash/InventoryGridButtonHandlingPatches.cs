@@ -1,6 +1,4 @@
-﻿using HarmonyLib;
-
-namespace Recycle_N_Reclaim.GamePatches.MarkAsTrash;
+﻿namespace Recycle_N_Reclaim.GamePatches.MarkAsTrash;
 
 [HarmonyPatch(typeof(InventoryGrid))]
 internal class InventoryGridButtonHandlingPatches

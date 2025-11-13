@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using HarmonyLib;
-using UnityEngine;
-
-namespace Recycle_N_Reclaim.YAMLStuff;
+﻿namespace Recycle_N_Reclaim.YAMLStuff;
 
 [HarmonyPatch(typeof(ObjectDB), nameof(ObjectDB.Awake))]
 [HarmonyPriority(Priority.Last)]
@@ -23,10 +17,10 @@ public class GroupUtils
     // Get a list of all excluded groups for a container
     public static List<string> GetExcludedGroups(string container)
     {
-        if (Recycle_N_ReclaimPlugin.yamlData.Containers.TryGetValue(container, out var containerObj))
+        if (yamlData.Containers.TryGetValue(container, out var containerObj))
         {
             return containerObj.Exclude.Where(excludeItem =>
-                    Recycle_N_ReclaimPlugin.yamlData.Groups.ContainsKey(excludeItem))
+                    yamlData.Groups.ContainsKey(excludeItem))
                 .ToList();
         }
 
@@ -35,26 +29,26 @@ public class GroupUtils
 
     public static bool IsGroupDefined(string groupName)
     {
-        return Recycle_N_ReclaimPlugin.yamlData.Groups.ContainsKey(groupName);
+        return yamlData.Groups.ContainsKey(groupName);
     }
 
 
 // Check if a group exists in the container data
     public static bool GroupExists(string groupName)
     {
-        return Recycle_N_ReclaimPlugin.yamlData.Groups.ContainsKey(groupName);
+        return yamlData.Groups.ContainsKey(groupName);
     }
 
 // Get a list of all groups in the container data
     public static List<string> GetAllGroups()
     {
-        return Recycle_N_ReclaimPlugin.yamlData.Groups.Keys.ToList();
+        return yamlData.Groups.Keys.ToList();
     }
 
 // Get a list of all items in a group
     public static List<string> GetItemsInGroup(string groupName)
     {
-        if (Recycle_N_ReclaimPlugin.yamlData.Groups.TryGetValue(groupName, out var groupObj))
+        if (yamlData.Groups.TryGetValue(groupName, out var groupObj))
         {
             return groupObj.ToList();
         }
@@ -247,19 +241,19 @@ public class GroupUtils
         // Check if the group exists, and if not, create it
         if (!GroupExists(groupName))
         {
-            Recycle_N_ReclaimPlugin.yamlData.Groups[groupName] = new List<string>();
+            yamlData.Groups[groupName] = new List<string>();
 
             // Also add it to predefined groups
-            Recycle_N_ReclaimPlugin.predefinedGroups[groupName] = new HashSet<string>();
+            predefinedGroups[groupName] = new HashSet<string>();
         }
 
         // Add the item to the group
         string prefabName = Utils.GetPrefabName(itemDrop.m_itemData.m_dropPrefab);
-        if (Recycle_N_ReclaimPlugin.yamlData.Groups[groupName].Contains(prefabName)) return;
-        Recycle_N_ReclaimPlugin.yamlData.Groups[groupName].Add(prefabName);
+        if (yamlData.Groups[groupName].Contains(prefabName)) return;
+        yamlData.Groups[groupName].Add(prefabName);
 
         // Add the item to the predefined group as well
-        Recycle_N_ReclaimPlugin.predefinedGroups[groupName].Add(prefabName);
+        predefinedGroups[groupName].Add(prefabName);
 #if DEBUG
         Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"(CreatePredefinedGroups) Added {prefabName} to {groupName}");
 #endif
@@ -268,17 +262,17 @@ public class GroupUtils
 
     public static bool IsPrefabExcludedInReclaiming(string prefabName)
     {
-        return IsPrefabExcludedInEntity(Recycle_N_ReclaimPlugin.yamlData.Reclaiming, prefabName);
+        return IsPrefabExcludedInEntity(yamlData.Reclaiming, prefabName);
     }
 
     public static bool IsPrefabExcludedInInventory(string prefabName)
     {
-        return IsPrefabExcludedInEntity(Recycle_N_ReclaimPlugin.yamlData.Inventory, prefabName);
+        return IsPrefabExcludedInEntity(yamlData.Inventory, prefabName);
     }
 
     public static bool IsPrefabExcludedInContainer(string containerName, string prefabName)
     {
-        if (Recycle_N_ReclaimPlugin.yamlData.Containers.TryGetValue(containerName, out var container))
+        if (yamlData.Containers.TryGetValue(containerName, out var container))
         {
             return IsPrefabExcludedInEntity(container, prefabName);
         }
@@ -324,7 +318,7 @@ public class GroupUtils
                 }
 
                 // Check if it's a group
-                if (Recycle_N_ReclaimPlugin.yamlData.Groups.TryGetValue(item, out var group))
+                if (yamlData.Groups.TryGetValue(item, out var group))
                 {
                     if (group.Contains(prefabName))
                     {
@@ -346,7 +340,7 @@ public class GroupUtils
                 }
 
                 // Check if it's a group
-                if (Recycle_N_ReclaimPlugin.yamlData.Groups.TryGetValue(item, out var group))
+                if (yamlData.Groups.TryGetValue(item, out var group))
                 {
                     if (group.Contains(prefabName))
                     {

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
-using HarmonyLib;
+﻿using System.Security.Cryptography;
 
 namespace Recycle_N_Reclaim.GamePatches;
 
@@ -14,16 +8,16 @@ public static class RegisterAndCheckVersion
     private static void Prefix(ZNetPeer peer, ref ZNet __instance)
     {
         // Register version check call
-        Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug("Registering version RPC handler");
-        peer.m_rpc.Register($"{Recycle_N_ReclaimPlugin.ModName}_VersionCheck",
+        Recycle_N_ReclaimLogger.LogDebug("Registering version RPC handler");
+        peer.m_rpc.Register($"{ModName}_VersionCheck",
             new Action<ZRpc, ZPackage>(RpcHandlers.RPC_Recycle_N_Reclaim_Version));
 
         // Make calls to check versions
-        Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogInfo("Invoking version check");
+        Recycle_N_ReclaimLogger.LogInfo("Invoking version check");
         ZPackage zpackage = new();
-        zpackage.Write(Recycle_N_ReclaimPlugin.ModVersion);
+        zpackage.Write(ModVersion);
         zpackage.Write(RpcHandlers.ComputeHashForMod().Replace("-", ""));
-        peer.m_rpc.Invoke($"{Recycle_N_ReclaimPlugin.ModName}_VersionCheck", zpackage);
+        peer.m_rpc.Invoke($"{ModName}_VersionCheck", zpackage);
     }
 }
 
@@ -34,14 +28,14 @@ public static class VerifyClient
     {
         if (!__instance.IsServer() || RpcHandlers.ValidatedPeers.Contains(rpc)) return true;
         // Disconnect peer if they didn't send mod version at all
-        Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogWarning($"Peer ({rpc.m_socket.GetHostName()}) never sent version or couldn't due to previous disconnect, disconnecting");
+        Recycle_N_ReclaimLogger.LogWarning($"Peer ({rpc.m_socket.GetHostName()}) never sent version or couldn't due to previous disconnect, disconnecting");
         rpc.Invoke("Error", 3);
         return false; // Prevent calling underlying method
     }
 
     private static void Postfix(ZNet __instance)
     {
-        ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.instance.GetServerPeerID(), $"{Recycle_N_ReclaimPlugin.ModName}RequestAdminSync",
+        ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.instance.GetServerPeerID(), $"{ModName}RequestAdminSync",
             new ZPackage());
     }
 }
@@ -55,7 +49,7 @@ public class ShowConnectionError
         {
             __instance.m_connectionFailedError.fontSizeMax = 25;
             __instance.m_connectionFailedError.fontSizeMin = 15;
-            __instance.m_connectionFailedError.text += "\n" + Recycle_N_ReclaimPlugin.ConnectionError;
+            __instance.m_connectionFailedError.text += "\n" + ConnectionError;
         }
     }
 }
@@ -67,7 +61,7 @@ public static class RemoveDisconnectedPeerFromVerified
     {
         if (!__instance.IsServer()) return;
         // Remove peer from validated list
-        Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogInfo(
+        Recycle_N_ReclaimLogger.LogInfo(
             $"Peer ({peer.m_rpc.m_socket.GetHostName()}) disconnected, removing from validated list");
         _ = RpcHandlers.ValidatedPeers.Remove(peer.m_rpc);
     }
@@ -84,13 +78,13 @@ public static class RpcHandlers
 
         var hashForAssembly = ComputeHashForMod().Replace("-", "");
 
-        Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogInfo($"Hash/Version check, local: {Recycle_N_ReclaimPlugin.ModVersion} {hashForAssembly} remote: {version} {hash}");
-        if (hash != hashForAssembly || version != Recycle_N_ReclaimPlugin.ModVersion)
+        Recycle_N_ReclaimLogger.LogInfo($"Hash/Version check, local: {ModVersion} {hashForAssembly} remote: {version} {hash}");
+        if (hash != hashForAssembly || version != ModVersion)
         {
-            Recycle_N_ReclaimPlugin.ConnectionError = $"{Recycle_N_ReclaimPlugin.ModName} Installed: {Recycle_N_ReclaimPlugin.ModVersion} {hashForAssembly}\n Needed: {version} {hash}";
+            ConnectionError = $"{ModName} Installed: {ModVersion} {hashForAssembly}\n Needed: {version} {hash}";
             if (!ZNet.instance.IsServer()) return;
             // Different versions - force disconnect client from server
-            Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogWarning($"Peer ({rpc.m_socket.GetHostName()}) has incompatible version, disconnecting...");
+            Recycle_N_ReclaimLogger.LogWarning($"Peer ({rpc.m_socket.GetHostName()}) has incompatible version, disconnecting...");
             rpc.Invoke("Error", 3);
         }
         else
@@ -98,12 +92,12 @@ public static class RpcHandlers
             if (!ZNet.instance.IsServer())
             {
                 // Enable mod on client if versions match
-                Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogInfo("Received same version from server!");
+                Recycle_N_ReclaimLogger.LogInfo("Received same version from server!");
             }
             else
             {
                 // Add client to validated list
-                Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogInfo($"Adding peer ({rpc.m_socket.GetHostName()}) to validated list");
+                Recycle_N_ReclaimLogger.LogInfo($"Adding peer ({rpc.m_socket.GetHostName()}) to validated list");
                 ValidatedPeers.Add(rpc);
             }
         }

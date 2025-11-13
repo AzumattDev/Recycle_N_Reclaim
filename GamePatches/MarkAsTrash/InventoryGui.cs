@@ -1,7 +1,4 @@
-﻿using HarmonyLib;
-using UnityEngine;
-
-namespace Recycle_N_Reclaim.GamePatches.MarkAsTrash;
+﻿namespace Recycle_N_Reclaim.GamePatches.MarkAsTrash;
 
 [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.Show))]
 static class InventoryGuiShowPatch

@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace Recycle_N_Reclaim.GamePatches.UI;

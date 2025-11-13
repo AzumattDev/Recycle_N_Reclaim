@@ -17,6 +17,6 @@ internal class TrashingMode
 
     internal static bool IsInTrashingMode()
     {
-        return HasCurrentlyToggledTrashing || Recycle_N_ReclaimPlugin.TrashingModifierKeybind1.Value.IsKeyHeld();
+        return HasCurrentlyToggledTrashing || TrashingModifierKeybind1.Value.IsKeyHeld();
     }
 }

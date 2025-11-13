@@ -1,11 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Auga;
-using Recycle_N_Reclaim.GamePatches.Recycling;
-using Recycle_N_Reclaim.YAMLStuff;
-using TMPro;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using Auga;
 
 namespace Recycle_N_Reclaim.GamePatches.UI;
 
@@ -46,20 +39,20 @@ public class StationRecyclingTabHolder : MonoBehaviour
         if (Player.m_localPlayer == null)
             return;
 
-        Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug("Creating Workbench Tab");
+        Recycle_N_ReclaimLogger.LogDebug("Creating Workbench Tab");
 
-        if (Recycle_N_ReclaimPlugin.HasAuga)
+        if (HasAuga)
         {
-            var exists = Auga.API.Workbench_HasWorkbenchTab("Reclaim");
+            var exists = API.Workbench_HasWorkbenchTab("Reclaim");
             if (!exists)
             {
                 var pngFile = Utils.LoadTextureFromResources("RecyclingPanel.png");
 
                 var buttonSprite = Sprite.Create(pngFile, new Rect(0, 0, pngFile.width, pngFile.height), new Vector2(0, 0), 100.0f);
-                if (Recycle_N_ReclaimPlugin.epicLootAssembly != null)
-                    _augaTabData = API.Workbench_AddWorkbenchTab("Reclaim", buttonSprite, Recycle_N_ReclaimPlugin.ModName.Replace("_", "-"), (index) => OnRecycleClick());
+                if (epicLootAssembly != null)
+                    _augaTabData = API.Workbench_AddWorkbenchTab("Reclaim", buttonSprite, ModName.Replace("_", "-"), (index) => OnRecycleClick());
                 else
-                    _augaTabData = API.Workbench_AddVanillaWorkbenchTab("Reclaim", buttonSprite, Recycle_N_ReclaimPlugin.ModName.Replace("_", "-"), (index) => OnRecycleClick());
+                    _augaTabData = API.Workbench_AddVanillaWorkbenchTab("Reclaim", buttonSprite, ModName.Replace("_", "-"), (index) => OnRecycleClick());
 
                 var tabButtonGameObject = _augaTabData.TabButtonGO;
                 _recyclingTabButtonGameObject = tabButtonGameObject;
@@ -86,7 +79,7 @@ public class StationRecyclingTabHolder : MonoBehaviour
             _recyclingTabButtonComponent.onClick.AddListener(OnRecycleClick);
             var textComponent = _recyclingTabButtonGameObject.GetComponentInChildren<TMP_Text>();
             if (textComponent != null)
-                textComponent.text = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_reclaim_tab");
+                textComponent.text = Localize("$azumatt_recycle_n_reclaim_reclaim_tab");
         }
 
         var shouldBeActive = Player.m_localPlayer.GetCurrentCraftingStation() != null;
@@ -98,7 +91,7 @@ public class StationRecyclingTabHolder : MonoBehaviour
         _recyclingTabButtonComponent.interactable = false;
         InventoryGui.instance.m_tabCraft.interactable = true;
         InventoryGui.instance.m_tabUpgrade.interactable = true;
-        Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug("OnRecycleClick");
+        Recycle_N_ReclaimLogger.LogDebug("OnRecycleClick");
         UpdateCraftingPanel();
     }
 
@@ -130,7 +123,7 @@ public class StationRecyclingTabHolder : MonoBehaviour
         else
             InventoryGui.instance.SetRecipe(-1, true);
 
-        if (Recycle_N_ReclaimPlugin.HasAuga)
+        if (HasAuga)
         {
             API.ComplexTooltip_SetItem(_itemInfoGo, igui.get_m_selectedRecipe().ItemData);
         }
@@ -141,7 +134,7 @@ public class StationRecyclingTabHolder : MonoBehaviour
         var localPlayer = Player.m_localPlayer;
         var igui = InventoryGui.instance;
         var m_recipeList = igui.get_m_recipeList();
-        Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"Old recipe list had {m_recipeList.Count} entries. Cleaning up");
+        Recycle_N_ReclaimLogger.LogDebug($"Old recipe list had {m_recipeList.Count} entries. Cleaning up");
         foreach (var recipeElement in m_recipeList) Destroy(recipeElement.InterfaceElement);
         m_recipeList.Clear();
 
@@ -160,7 +153,7 @@ public class StationRecyclingTabHolder : MonoBehaviour
             AddRecipeToList(context, m_recipeList);
         }
 
-        Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug($"Added {m_recipeList.Count} entries");
+        Recycle_N_ReclaimLogger.LogDebug($"Added {m_recipeList.Count} entries");
 
         igui.m_recipeListRoot.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Max(igui.get_m_recipeListBaseSize(), m_recipeList.Count * igui.m_recipeListSpace));
     }
@@ -178,7 +171,7 @@ public class StationRecyclingTabHolder : MonoBehaviour
         component1.sprite = context.Item.GetIcon();
         component1.color = context.RecyclingImpediments.Count == 0 ? Color.white : new Color(1f, 0.0f, 1f, 0.0f);
         var component2 = element.transform.Find("name").GetComponent<TMP_Text>();
-        var str = Recycle_N_ReclaimPlugin.Localize(context.Item.m_shared.m_name);
+        var str = Localize(context.Item.m_shared.m_name);
         if (context.Item.m_stack > 1 && context.Item.m_shared.m_maxStackSize > 1)
             str = $"{str} x{context.Item.m_stack}";
         component2.text = str;
@@ -220,7 +213,7 @@ public class StationRecyclingTabHolder : MonoBehaviour
 
     public void SetActive(bool active)
     {
-        if (Recycle_N_ReclaimPlugin.EnableExperimentalCraftingTabUI.Value == Recycle_N_ReclaimPlugin.Toggle.Off) return;
+        if (EnableExperimentalCraftingTabUI.Value == Recycle_N_ReclaimPlugin.Toggle.Off) return;
 
         _recyclingTabButtonGameObject.SetActive(active);
     }
@@ -265,7 +258,7 @@ public class StationRecyclingTabHolder : MonoBehaviour
         {
             SetActive(igui.m_craftingStationIcon.gameObject, true);
             SetActive(igui.m_craftingStationLevelRoot.gameObject, true);
-            igui.m_craftingStationName.text = Recycle_N_ReclaimPlugin.Localize(currentCraftingStation.m_name);
+            igui.m_craftingStationName.text = Localize(currentCraftingStation.m_name);
             igui.m_craftingStationIcon.sprite = currentCraftingStation.m_icon;
             igui.m_craftingStationLevel.text = currentCraftingStation.GetLevel().ToString();
         }
@@ -273,7 +266,7 @@ public class StationRecyclingTabHolder : MonoBehaviour
         {
             SetActive(igui.m_craftingStationIcon.gameObject, false);
             SetActive(igui.m_craftingStationLevelRoot.gameObject, false);
-            igui.m_craftingStationName.text = Recycle_N_ReclaimPlugin.Localize("$hud_crafting");
+            igui.m_craftingStationName.text = Localize("$hud_crafting");
         }
     }
 
@@ -288,27 +281,27 @@ public class StationRecyclingTabHolder : MonoBehaviour
         igui.m_recipeDecription.enabled = true;
 
         igui.m_recipeIcon.sprite = igui.get_m_selectedRecipe().Recipe.m_item.m_itemData.m_shared.m_icons[itemData?.m_variant ?? igui.get_m_selectedVariant()];
-        string str = Recycle_N_ReclaimPlugin.Localize(igui.get_m_selectedRecipe().Recipe.m_item.m_itemData.m_shared.m_name);
+        string str = Localize(igui.get_m_selectedRecipe().Recipe.m_item.m_itemData.m_shared.m_name);
         if (analysisContext.Item.m_stack > 1)
             str = str + " x" + analysisContext.Item.m_stack;
         igui.m_recipeName.text = str;
 
         if (analysisContext.RecyclingImpediments.Count == 0)
 
-            igui.m_recipeDecription.text = "\n" + Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_requirements_fulfilled");
+            igui.m_recipeDecription.text = "\n" + Localize("$azumatt_recycle_n_reclaim_requirements_fulfilled");
         else
-            igui.m_recipeDecription.text = "\n" + Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_requirements_blocked")
+            igui.m_recipeDecription.text = "\n" + Localize("$azumatt_recycle_n_reclaim_requirements_blocked")
                                                 + $":\n\n<size=15>{string.Join("\n", analysisContext.RecyclingImpediments)}</size>";
 
         if (itemData != null)
         {
             SetActive(igui.m_itemCraftType.gameObject, true);
-            igui.m_itemCraftType.text = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_reclaim_item_level", Recycle_N_ReclaimPlugin.Localize(itemData.m_shared.m_name), itemData.m_quality.ToString());
+            igui.m_itemCraftType.text = Localize("$azumatt_recycle_n_reclaim_reclaim_item_level", Localize(itemData.m_shared.m_name), itemData.m_quality.ToString());
         }
         else
             SetActive(igui.m_itemCraftType.gameObject, false);
 
-        if (Recycle_N_ReclaimPlugin.HasAuga)
+        if (HasAuga)
         {
             if (_descriptionBoxGo == null)
             {
@@ -320,7 +313,7 @@ public class StationRecyclingTabHolder : MonoBehaviour
 
         SetActive(igui.m_variantButton.gameObject, igui.get_m_selectedRecipe().Recipe.m_item.m_itemData.m_shared.m_variants > 1 && igui.get_m_selectedRecipe().ItemData == null);
 
-        if (Recycle_N_ReclaimPlugin.epicLootAssembly == null)
+        if (epicLootAssembly == null)
         {
             SetupRequirementList(analysisContext);
         }
@@ -331,8 +324,8 @@ public class StationRecyclingTabHolder : MonoBehaviour
 
         SetActive(igui.m_minStationLevelIcon.gameObject, false);
         igui.m_craftButton.interactable = analysisContext.RecyclingImpediments.Count == 0;
-        igui.m_craftButton.GetComponentInChildren<TMP_Text>().text = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_reclaim_button");
-        igui.m_craftButton.GetComponent<UITooltip>().m_text = analysisContext.RecyclingImpediments.Count == 0 ? "" : Recycle_N_ReclaimPlugin.Localize("$msg_missingrequirement");
+        igui.m_craftButton.GetComponentInChildren<TMP_Text>().text = Localize("$azumatt_recycle_n_reclaim_reclaim_button");
+        igui.m_craftButton.GetComponent<UITooltip>().m_text = analysisContext.RecyclingImpediments.Count == 0 ? "" : Localize("$msg_missingrequirement");
     }
 
     private void ClearRecipeUI(InventoryGui igui)
@@ -346,7 +339,7 @@ public class StationRecyclingTabHolder : MonoBehaviour
         igui.m_craftButton.GetComponent<UITooltip>().m_text = "";
         SetActive(igui.m_variantButton.gameObject, false);
 
-        igui.m_craftButton.GetComponentInChildren<TMP_Text>().text = Recycle_N_ReclaimPlugin.Localize("$azumatt_recycle_n_reclaim_reclaim_button");
+        igui.m_craftButton.GetComponentInChildren<TMP_Text>().text = Localize("$azumatt_recycle_n_reclaim_reclaim_button");
         SetActive(igui.m_itemCraftType.gameObject, false);
         for (int index = 0; index < igui.m_recipeRequirementList.Length; ++index)
             InventoryGui.HideRequirement(igui.m_recipeRequirementList[index].transform);
@@ -424,8 +417,8 @@ public class StationRecyclingTabHolder : MonoBehaviour
         component3.gameObject.SetActive(true);
         component1.sprite = entry.RecipeItemData.GetIcon();
         component1.color = Color.white;
-        component4.m_text = Recycle_N_ReclaimPlugin.Localize(entry.RecipeItemData.m_shared.m_name);
-        component2.text = Recycle_N_ReclaimPlugin.Localize(entry.RecipeItemData.m_shared.m_name);
+        component4.m_text = Localize(entry.RecipeItemData.m_shared.m_name);
+        component2.text = Localize(entry.RecipeItemData.m_shared.m_name);
         component3.text = entry.Amount.ToString();
         component3.color = Color.white;
     }
@@ -464,8 +457,8 @@ public class StationRecyclingTabHolder : MonoBehaviour
         component3.gameObject.SetActive(true);
         component1.sprite = entry.RecipeItemData.GetIcon();
         component1.color = Color.white;
-        component4.m_text = Recycle_N_ReclaimPlugin.Localize(entry.RecipeItemData.m_shared.m_name);
-        component2.text = Recycle_N_ReclaimPlugin.Localize(entry.RecipeItemData.m_shared.m_name);
+        component4.m_text = Localize(entry.RecipeItemData.m_shared.m_name);
+        component2.text = Localize(entry.RecipeItemData.m_shared.m_name);
         component3.text = entry.Amount.ToString();
         component3.color = Color.white;
         if (entry.Amount <= 0)

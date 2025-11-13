@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using YamlDotNet.Serialization;
-
-namespace Recycle_N_Reclaim.YAMLStuff;
+﻿namespace Recycle_N_Reclaim.YAMLStuff;
 
 public class Root
 {
