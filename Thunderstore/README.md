@@ -108,6 +108,11 @@ Lock Configuration [Synced with Server]
 * If on, the configuration is locked and can be changed by server admins only.
     * Default Value: On
 
+Apply Crafted By [Synced with Server]
+
+* If on, the player will be the 'crafter' of each recycled item. If off, these values are empty
+    * Default Value: On
+
 `2 - Inventory Recycle`
 
 Enabled [Synced with Server]

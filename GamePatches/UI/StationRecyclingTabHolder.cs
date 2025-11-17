@@ -213,7 +213,7 @@ public class StationRecyclingTabHolder : MonoBehaviour
 
     public void SetActive(bool active)
     {
-        if (EnableExperimentalCraftingTabUI.Value == Recycle_N_ReclaimPlugin.Toggle.Off) return;
+        if (EnableExperimentalCraftingTabUI.Value.IsOff()) return;
 
         _recyclingTabButtonGameObject.SetActive(active);
     }

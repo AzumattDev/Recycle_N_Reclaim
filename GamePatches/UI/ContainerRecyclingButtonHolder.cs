@@ -24,7 +24,7 @@ public class ContainerRecyclingButtonHolder : MonoBehaviour
             SetupButton();
         }
 
-        _recycleAllButton.gameObject.SetActive(ContainerRecyclingEnabled.Value == Recycle_N_ReclaimPlugin.Toggle.On);
+        _recycleAllButton.gameObject.SetActive(ContainerRecyclingEnabled.Value.IsOn());
     }
 
     private void OnDestroy()
@@ -41,7 +41,7 @@ public class ContainerRecyclingButtonHolder : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (ContainerRecyclingEnabled.Value == Recycle_N_ReclaimPlugin.Toggle.Off) return;
+        if (ContainerRecyclingEnabled.Value.IsOff()) return;
         if (_recycleAllButton == null) return;
         if (!InventoryGui.instance.IsContainerOpen() && _prefired) SetButtonState(false);
     }

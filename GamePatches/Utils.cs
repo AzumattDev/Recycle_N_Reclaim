@@ -37,7 +37,7 @@ public static class Utils
         {
             Recipe recipe = ObjectDB.instance.GetRecipe(___m_dragItem);
 
-            if (recipe != null && (returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.On || Player.m_localPlayer.IsRecipeKnown(___m_dragItem.m_shared.m_name)))
+            if (recipe != null && (returnUnknownResources.Value.IsOn() || Player.m_localPlayer.IsRecipeKnown(___m_dragItem.m_shared.m_name)))
             {
                 Recycle_N_ReclaimLogger.LogDebug($"Recipe stack: {recipe.m_amount} num of stacks: {___m_dragAmount / recipe.m_amount}");
 
@@ -45,7 +45,7 @@ public static class Utils
 
                 bool isMagic = false;
                 bool cancel = false;
-                if (epicLootAssembly != null && returnEnchantedResources.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+                if (epicLootAssembly != null && returnEnchantedResources.Value.IsOn())
                     isMagic = (bool)UpdateItemDragPatch.isMagicMethod?.Invoke(null, new[] { ___m_dragItem });
 
                 if (isMagic)
@@ -59,7 +59,7 @@ public static class Utils
                         bool isRecipeKnown = recipe2 != null && Player.m_localPlayer.IsRecipeKnown(kvp.Key.m_itemData.m_shared.m_name);
                         bool isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(kvp.Key.m_itemData.m_shared.m_name);
 
-                        if (returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off &&
+                        if (returnUnknownResources.Value.IsOff() &&
                             (!isRecipeKnown || !isKnownMaterial))
                         {
                             Player.m_localPlayer.Message(MessageHud.MessageType.Center, Localize("$azumatt_recycle_n_reclaim_no_material_recipes"));
@@ -75,7 +75,7 @@ public static class Utils
                 }
 
 
-                if (API.IsLoaded() && returnEnchantedResources.Value == Recycle_N_ReclaimPlugin.Toggle.On)
+                if (API.IsLoaded() && returnEnchantedResources.Value.IsOn())
                 {
                     if (API.GetGems(___m_dragItem).Any())
                     {
@@ -93,7 +93,7 @@ public static class Utils
                             bool isRecipeKnown = recipe3 != null && Player.m_localPlayer.IsRecipeKnown(gemItem.Value.m_shared.m_name);
                             bool isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(gemItem.Value.m_shared.m_name);
 
-                            if (returnUnknownResources.Value == Recycle_N_ReclaimPlugin.Toggle.Off && (!isRecipeKnown || !isKnownMaterial))
+                            if (returnUnknownResources.Value.IsOff() && (!isRecipeKnown || !isKnownMaterial))
                             {
                                 Player.m_localPlayer.Message(MessageHud.MessageType.Center, Localize("$azumatt_recycle_n_reclaim_no_material_recipes"));
                                 return;
@@ -128,7 +128,13 @@ public static class Utils
 
                                     if (!GroupUtils.IsPrefabExcludedInInventory(global::Utils.GetPrefabName(prefab)))
                                     {
-                                        if (Player.m_localPlayer.GetInventory().AddItem(prefab.name, stack, req.m_resItem.m_itemData.m_quality, req.m_resItem.m_itemData.m_variant, 0, "") == null)
+                                        var player = Player.m_localPlayer;
+                                        var inventory = player.GetInventory();
+                                        ItemDrop.ItemData? addedItem = null;
+                                        addedItem = ApplyCraftedBy.Value.IsOn()
+                                            ? inventory.AddItem(prefab.name, stack, req.m_resItem.m_itemData.m_quality, req.m_resItem.m_itemData.m_variant, player.GetPlayerID(), player.GetPlayerName())
+                                            : inventory.AddItem(prefab.name, stack, req.m_resItem.m_itemData.m_quality, req.m_resItem.m_itemData.m_variant, 0, "");
+                                        if (addedItem == null)
                                         {
                                             Transform transform1;
                                             ItemDrop component = GameObject.Instantiate(prefab, (transform1 = Player.m_localPlayer.transform).position + transform1.forward + transform1.up, transform1.rotation).GetComponent<ItemDrop>();

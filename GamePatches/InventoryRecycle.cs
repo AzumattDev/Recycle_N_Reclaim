@@ -14,12 +14,12 @@ public static class UpdateItemDragPatch
 
     private static void Postfix(InventoryGui __instance, ItemDrop.ItemData ___m_dragItem, Inventory ___m_dragInventory, int ___m_dragAmount, ref GameObject ___m_dragGo)
     {
-        if (lockToAdmin.Value == Recycle_N_ReclaimPlugin.Toggle.On && !ConfigSyncVar.IsAdmin)
+        if (lockToAdmin.Value.IsOn() && !ConfigSyncVar.IsAdmin)
         {
             return;
         }
 
-        if (discardInvEnabled.Value == Recycle_N_ReclaimPlugin.Toggle.Off || !hotKey.Value.IsDown() || ___m_dragItem == null || !___m_dragInventory.ContainsItem(___m_dragItem))
+        if (discardInvEnabled.Value.IsOff() || !hotKey.Value.IsDown() || ___m_dragItem == null || !___m_dragInventory.ContainsItem(___m_dragItem))
             return;
 
         Recycle_N_ReclaimLogger.LogDebug($"Discarding {___m_dragAmount}/{___m_dragItem.m_stack} {___m_dragItem.m_dropPrefab.name}");

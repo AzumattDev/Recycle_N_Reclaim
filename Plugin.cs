@@ -18,7 +18,7 @@ namespace Recycle_N_Reclaim;
 public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
 {
     internal const string ModName = "Recycle_N_Reclaim";
-    internal const string ModVersion = "1.3.9";
+    internal const string ModVersion = "1.3.10";
     internal const string Author = "Azumatt";
     private const string ModGUID = Author + "." + ModName;
     private static string ConfigFileName = ModGUID + ".cfg";
@@ -57,7 +57,8 @@ public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
         _serverConfigLocked = config("1 - General", "Lock Configuration", Toggle.On, "If on, the configuration is locked and can be changed by server admins only.");
         _ = ConfigSyncVar.AddLockingConfigEntry(_serverConfigLocked);
 
-
+        ApplyCraftedBy = config("1 - General", "Apply Crafted By", Toggle.On, "If on, the player will be the 'crafter' of each recycled item. If off, these values are empty");
+        
         /* Inventory Discard */
         var sectionName = "2 - Inventory Recycle";
         /* Discard Items in Inventory */
@@ -352,6 +353,7 @@ public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
     #region ConfigOptions
 
     private static ConfigEntry<Toggle> _serverConfigLocked = null!;
+    public static ConfigEntry<Toggle> ApplyCraftedBy = null!;
 
     /* Inventory Discard */
     public static ConfigEntry<KeyboardShortcut> hotKey = null!;
@@ -475,5 +477,18 @@ public static class KeyboardExtensions
     public static bool IsKeyHeld(this KeyboardShortcut shortcut)
     {
         return shortcut.MainKey != KeyCode.None && Input.GetKey(shortcut.MainKey) && shortcut.Modifiers.All(Input.GetKey);
+    }
+}
+
+public static class ToggleExtensions
+{
+    public static bool IsOn(this Recycle_N_ReclaimPlugin.Toggle toggle)
+    {
+        return toggle == Recycle_N_ReclaimPlugin.Toggle.On;
+    }
+
+    public static bool IsOff(this Recycle_N_ReclaimPlugin.Toggle toggle)
+    {
+        return toggle == Recycle_N_ReclaimPlugin.Toggle.Off;
     }
 }
