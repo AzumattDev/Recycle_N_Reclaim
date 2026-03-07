@@ -226,7 +226,7 @@ public class StationRecyclingTabHolder : MonoBehaviour
         UpdateRecyclingAnalysisContexts(selectedRecipeIndex, player);
         UpdateCraftingStationUI(player);
 
-        if (igui.get_m_selectedRecipe().Recipe)
+        if (igui.get_m_selectedRecipe().Recipe && selectedRecipeIndex >= 0 && selectedRecipeIndex < _recyclingAnalysisContexts.Count)
         {
             UpdateRecipeUI(selectedRecipeIndex, igui);
         }

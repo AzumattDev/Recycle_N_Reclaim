@@ -33,6 +33,8 @@ public class UserConfig
 
     internal static void ResetAllTrashing()
     {
+        if (_trashedSlots.Count == 0) return;
+
 #if DEBUG
             Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogDebug("Resetting all MarkAsTrash data!");
 #endif

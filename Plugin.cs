@@ -18,7 +18,7 @@ namespace Recycle_N_Reclaim;
 public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
 {
     internal const string ModName = "Recycle_N_Reclaim";
-    internal const string ModVersion = "1.3.10";
+    internal const string ModVersion = "1.3.11";
     internal const string Author = "Azumatt";
     private const string ModGUID = Author + "." + ModName;
     private static string ConfigFileName = ModGUID + ".cfg";

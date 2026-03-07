@@ -341,8 +341,7 @@ public static class Reclaimer
                 var isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(kvp.Key.m_itemData.m_shared.m_name) || AllowRecyclingUnknownRecipes.Value.IsOn();
 
                 bool canRecycle = isKnownMaterial &&
-                                  (recipe2 == null ||
-                                   (isRecipeKnown && AllowRecyclingUnknownRecipes.Value != Recycle_N_ReclaimPlugin.Toggle.Off));
+                                  (recipe2 == null || isRecipeKnown || AllowRecyclingUnknownRecipes.Value.IsOn());
 
                 if (!canRecycle)
                 {
@@ -404,9 +403,7 @@ public static class Reclaimer
 
                 // Check if the item can be recycled based on your conditions
                 bool canRecycle = isKnownMaterial &&
-                                  (recipe == null ||
-                                   (isRecipeKnown &&
-                                    AllowRecyclingUnknownRecipes.Value != Recycle_N_ReclaimPlugin.Toggle.Off));
+                                  (recipe == null || isRecipeKnown || AllowRecyclingUnknownRecipes.Value.IsOn());
 
                 if (!canRecycle)
                 {
