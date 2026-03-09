@@ -111,6 +111,13 @@ reclaiming:
     - Hammer # Exclude this specific item from being reclaimed
   includeOverride:
     - All # Allow all items to be reclaimed, overrides the exclude rules above for "reclaiming" section
+  # recycleRates lets you override the global RecyclingRate config for specific items or groups.
+  # Values must be between 0.0 and 1.0. Items not listed here use the global RecyclingRate config value.
+  # You can use predefined group names (e.g. "Swords", "Armor") or individual prefab names.
+  recycleRates:
+    SwordBronze: 1.0     # Always return 100% of materials for this specific item
+    Armor: 0.75          # Return 75% of materials for all armor pieces
+    # Metals: 0.25       # Example: return only 25% for all metals
 
 # Containers section determines the rules for specific containers. It follows the limitations of the "reclaiming" section to determine what is actually reclaimed.
 # This section is primarily used for managing the items included or excluded from the "Reclaim All" functionality of containers, allowing you to prevent certain items 

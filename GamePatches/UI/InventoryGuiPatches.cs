@@ -1,4 +1,6 @@
-﻿namespace Recycle_N_Reclaim.GamePatches.UI;
+﻿using Recycle_N_Reclaim.Managers;
+
+namespace Recycle_N_Reclaim.GamePatches.UI;
 
 [HarmonyPatch]
 public static class InventoryGuiPatches
@@ -65,9 +67,19 @@ public static class InventoryGuiPatches
         if (RecyclingTabButtonHolder == null || !RecyclingTabButtonHolder.InRecycleTab()) return;
         if (__instance == Player.m_localPlayer.GetInventory())
         {
+            if (!RecyclingTabButtonHolder.HasInventoryChanged(__instance)) return;
             RecyclingTabButtonHolder.UpdateRecyclingList();
             InventoryGui.instance.SetRecipe(-1, false);
         }
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.Update))]
+    static void OnInventoryGuiUpdate()
+    {
+        if (!InventoryGui.IsVisible() || Player.m_localPlayer == null) return;
+        if (UndoRecycleKeybind.Value.IsKeyDown() && RecycleUndoManager.CanUndo)
+            RecycleUndoManager.TryUndo();
     }
 
     [HarmonyPostfix]

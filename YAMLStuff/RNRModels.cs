@@ -31,6 +31,9 @@ public class Reclaiming
 
     [YamlMember(Alias = "includeOverride")]
     public List<string> IncludeOverride { get; set; }
+
+    [YamlMember(Alias = "recycleRates")]
+    public Dictionary<string, float> RecycleRates { get; set; }
 }
 
 public class Inventory

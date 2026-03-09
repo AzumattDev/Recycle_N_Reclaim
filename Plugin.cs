@@ -18,7 +18,7 @@ namespace Recycle_N_Reclaim;
 public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
 {
     internal const string ModName = "Recycle_N_Reclaim";
-    internal const string ModVersion = "1.3.11";
+    internal const string ModVersion = "1.4.0";
     internal const string Author = "Azumatt";
     private const string ModGUID = Author + "." + ModName;
     private static string ConfigFileName = ModGUID + ".cfg";
@@ -81,6 +81,7 @@ public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
 
 
         DisplayTooltipHint = config(sectionName, nameof(DisplayTooltipHint), true, "Whether to add additional info the item tooltip of a Trashed or trash flagged item.", false);
+        ShowRecycleYieldInTooltip = config(sectionName, nameof(ShowRecycleYieldInTooltip), false, "If on, hovering an item will show what it would yield if recycled.", false);
 
         TrashingKeybind = config(sectionName, nameof(TrashingKeybind), new KeyboardShortcut(KeyCode.Mouse2), $"Key(s) that when pressed while holding your modifier key will trash all items marked as trash. Default setting is middle mouse click", false);
         TrashingModifierKeybind1 = config(sectionName, nameof(TrashingModifierKeybind1), new KeyboardShortcut(KeyCode.X), $"{TrashingKey}.", false);
@@ -117,6 +118,15 @@ public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
         AllowRecyclingUnknownRecipes = config("3 - Reclaiming", "AllowRecyclingUnknownRecipes", Toggle.Off,
             "If enabled, it will allow you to recycle items that you do not know the recipe for yet.\n" +
             "Disabled by default as this can be cheaty, but sometimes required due to people losing progress.");
+
+        UndoRecycleKeybind = config("3 - Reclaiming", nameof(UndoRecycleKeybind), new KeyboardShortcut(KeyCode.Z, KeyCode.LeftControl),
+            "Keybind to undo the last reclaim from the Reclaim tab. Only works within the grace period.", false);
+        UndoRecycleGracePeriodSeconds = config("3 - Reclaiming", nameof(UndoRecycleGracePeriodSeconds), 20f,
+            "Number of seconds after a reclaim during which it can be undone. Set to 0 to disable undo entirely.");
+        UndoRecycleGracePeriodSeconds.SettingChanged += (sender, args) =>
+        {
+            if (UndoRecycleGracePeriodSeconds.Value < 0f) UndoRecycleGracePeriodSeconds.Value = 0f;
+        };
 
         ContainerRecyclingButtonPositionJsonString = config("4 - UI",
             "ContainerButtonPosition", new Vector3(496.0f, -374.0f, -1.0f),
@@ -411,10 +421,14 @@ public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
 
     // Inventory MarkAsTrash
 
-
     public static ConfigEntry<Color> BorderColorTrashedItem = null!;
     public static ConfigEntry<Color> BorderColorTrashedSlot = null!;
     public static ConfigEntry<bool> DisplayTooltipHint = null!;
+    public static ConfigEntry<bool> ShowRecycleYieldInTooltip = null!;
+
+    // Undo
+    public static ConfigEntry<KeyboardShortcut> UndoRecycleKeybind = null!;
+    public static ConfigEntry<float> UndoRecycleGracePeriodSeconds = null!;
     public static ConfigEntry<KeyboardShortcut> TrashingModifierKeybind1 = null!;
     public static ConfigEntry<KeyboardShortcut> TrashingKeybind = null!;
     public static ConfigEntry<string> TrashedSlotTooltip = null!;

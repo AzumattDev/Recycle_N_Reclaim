@@ -7,6 +7,7 @@ public class StationRecyclingTabHolder : MonoBehaviour
     private GameObject _recyclingTabButtonGameObject;
     private Button _recyclingTabButtonComponent;
     private List<RecyclingAnalysisContext> _recyclingAnalysisContexts = new List<RecyclingAnalysisContext>();
+    private int _lastInventoryHash = 0;
     private WorkbenchTabData _augaTabData;
     private GameObject _itemInfoGo;
     private GameObject _descriptionBoxGo;
@@ -156,6 +157,8 @@ public class StationRecyclingTabHolder : MonoBehaviour
         Recycle_N_ReclaimLogger.LogDebug($"Added {m_recipeList.Count} entries");
 
         igui.m_recipeListRoot.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Max(igui.get_m_recipeListBaseSize(), m_recipeList.Count * igui.m_recipeListSpace));
+
+        _lastInventoryHash = ComputeInventoryHash(localPlayer.GetInventory());
     }
 
     private void AddRecipeToList(RecyclingAnalysisContext context, List<InventoryGui.RecipeDataPair> m_recipeList)
@@ -198,6 +201,30 @@ public class StationRecyclingTabHolder : MonoBehaviour
         m_recipeList.Add(new InventoryGui.RecipeDataPair(context.Recipe, context.Item, element, canCraft));
     }
 
+
+    private static int ComputeInventoryHash(Inventory inventory)
+    {
+        unchecked
+        {
+            int hash = 17;
+            foreach (var item in inventory.GetAllItems().OrderBy(i => i.m_shared.m_name).ThenBy(i => i.m_quality))
+            {
+                hash = hash * 31 + item.m_shared.m_name.GetHashCode();
+                hash = hash * 31 + item.m_quality;
+                hash = hash * 31 + item.m_stack;
+                hash = hash * 31 + (item.m_equipped ? 1 : 0);
+            }
+            return hash;
+        }
+    }
+
+    public bool HasInventoryChanged(Inventory inventory)
+    {
+        int newHash = ComputeInventoryHash(inventory);
+        if (newHash == _lastInventoryHash) return false;
+        _lastInventoryHash = newHash;
+        return true;
+    }
 
     public bool InRecycleTab()
     {
@@ -362,7 +389,7 @@ public class StationRecyclingTabHolder : MonoBehaviour
             igui.set_m_craftTimer(igui.get_m_craftTimer() + dt);
             if (igui.get_m_craftTimer() >= (double)igui.m_craftDuration)
             {
-                Reclaimer.DoInventoryChanges(_recyclingAnalysisContexts[selectedRecipeIndex], player.GetInventory(), player);
+                Reclaimer.DoInventoryChanges(_recyclingAnalysisContexts[selectedRecipeIndex], player.GetInventory(), player, recordUndo: true);
                 igui.set_m_craftTimer(-1f);
                 igui.SetRecipe(-1, false);
                 UpdateCraftingPanel();

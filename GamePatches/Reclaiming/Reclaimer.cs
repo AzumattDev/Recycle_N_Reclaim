@@ -1,8 +1,28 @@
-﻿namespace Recycle_N_Reclaim.GamePatches.Recycling;
+﻿using Recycle_N_Reclaim.Managers;
+
+namespace Recycle_N_Reclaim.GamePatches.Recycling;
 
 public static class Reclaimer
 {
     private static bool _loggedErrorsOnce = false;
+    private static Dictionary<string, List<Recipe>> _recipeCache = new();
+
+    internal static void BuildRecipeCache(ObjectDB instance)
+    {
+        _recipeCache.Clear();
+        foreach (var recipe in instance.m_recipes)
+        {
+            var name = recipe?.m_item?.m_itemData?.m_shared?.m_name;
+            if (name == null) continue;
+            if (!_recipeCache.TryGetValue(name, out var list))
+            {
+                list = new List<Recipe>();
+                _recipeCache[name] = list;
+            }
+            list.Add(recipe);
+        }
+        Recycle_N_ReclaimLogger.LogDebug($"Built recipe cache with {_recipeCache.Count} entries");
+    }
 
     public static void RecycleInventoryForAllRecipes(Inventory inventory, string containerName, Player player)
     {
@@ -108,41 +128,48 @@ public static class Reclaimer
             analysisContext.DisplayImpediments.Add(Localize("$azumatt_recycle_n_reclaim_item_from_station", Localize(analysisContext.Recipe.m_craftingStation.m_name)));
     }
 
-    public static void DoInventoryChanges(RecyclingAnalysisContext analysisContext, Inventory inventory, Player player)
+    public static void DoInventoryChanges(RecyclingAnalysisContext analysisContext, Inventory inventory, Player player, bool recordUndo = false)
     {
         Recycle_N_ReclaimLogger.LogDebug("Inventory changes requested");
+        var addedEntries = new List<RecyclingAnalysisContext.ReclaimingYieldEntry>();
+
         foreach (var entry in analysisContext.Entries)
         {
             if (entry is { Amount: 0, InitialRecipeHadZero: true }) continue;
-            ItemDrop.ItemData? addedItem = null;
-            addedItem = ApplyCraftedBy.Value.IsOn() 
-                ? inventory.AddItem(entry.Prefab.name, entry.Amount, entry.mQuality, entry.mVariant, player.GetPlayerID(), player.GetPlayerName()) 
+            var addedItem = ApplyCraftedBy.Value.IsOn()
+                ? inventory.AddItem(entry.Prefab.name, entry.Amount, entry.mQuality, entry.mVariant, player.GetPlayerID(), player.GetPlayerName())
                 : inventory.AddItem(entry.Prefab.name, entry.Amount, entry.mQuality, entry.mVariant, 0, "");
 
             if (addedItem != null)
             {
                 Recycle_N_ReclaimLogger.LogDebug($"Added {entry.Amount} of {entry.Prefab.name}");
+                addedEntries.Add(entry);
                 continue;
             }
 
             if (entry.Amount < 1 && PreventZeroResourceYields.Value.IsOff())
             {
-                Recycle_N_ReclaimLogger.LogDebug("Adding item failed, but player disabled zero resource yields prevention, item loss expected. ");
+                Recycle_N_ReclaimLogger.LogDebug("Adding item failed, but player disabled zero resource yields prevention, item loss expected.");
                 continue;
             }
 
-            Recycle_N_ReclaimLogger.LogError("Inventory refused to add item after valid analysis! Check the error from the inventory for details. Will mark analysis for dumping.");
+            // Roll back everything added so far to prevent item loss
+            Recycle_N_ReclaimLogger.LogError("Inventory refused to add item after valid analysis! Rolling back to prevent item loss.");
+            foreach (var added in addedEntries)
+                inventory.RemoveItem(added.RecipeItemData.m_shared.m_name, added.Amount);
+
             analysisContext.ShouldErrorDumpAnalysis = true;
             analysisContext.RecyclingImpediments.Add(Localize("$azumatt_recycle_n_reclaim_inventory_couldnt_add", Localize(entry.Prefab.name)));
             if (analysisContext.ShouldErrorDumpAnalysis || DebugAlwaysDumpAnalysisContext.Value.IsOn())
-            {
                 analysisContext.Dump();
-            }
+            return;
         }
 
         if (inventory.RemoveItem(analysisContext.Item))
         {
             Recycle_N_ReclaimLogger.LogDebug($"Removed item {analysisContext.Item.m_shared.m_name}");
+            if (recordUndo)
+                RecycleUndoManager.Record(analysisContext.Item, analysisContext.Entries);
             return;
         }
 
@@ -150,18 +177,15 @@ public static class Reclaimer
         analysisContext.ShouldErrorDumpAnalysis = true;
         analysisContext.RecyclingImpediments.Add(Localize("$azumatt_recycle_n_reclaim_inventory_couldnt_remove", Localize(analysisContext.Item.m_shared.m_name)));
         if (analysisContext.ShouldErrorDumpAnalysis || DebugAlwaysDumpAnalysisContext.Value.IsOn())
-        {
             analysisContext.Dump();
-        }
     }
 
     private static bool TryFindRecipeForItem(RecyclingAnalysisContext analysisContext, Player player)
     {
         var item = analysisContext.Item;
-        var foundRecipes = ObjectDB.instance.m_recipes
-            // some recipes are just weird, so check for null item, data and even shared (somehow it happens)
-            .Where(rec => rec?.m_item?.m_itemData?.m_shared?.m_name == item.m_shared.m_name)
-            .ToList();
+        var foundRecipes = _recipeCache.TryGetValue(item.m_shared.m_name, out var cached)
+            ? cached.Where(rec => rec?.m_item?.m_itemData?.m_shared != null).ToList()
+            : new List<Recipe>();
         if (foundRecipes.Count == 0)
         {
             Recycle_N_ReclaimLogger.LogDebug($"Could not find a recipe for {item.m_shared.m_name}");
@@ -209,38 +233,48 @@ public static class Reclaimer
 
     private static void AnalyzeInventoryHasEnoughEmptySlots(RecyclingAnalysisContext analysisContext, Inventory inventory)
     {
-        // based on assumption FindFreeStackSpace and FindEmptySlot are properly overridden
-        bool haveEnoughSlots = true;
-        int emptySlots = 0;
-        double neededSlots = 0;
+        var virtualStackUsed = new Dictionary<(string, float), int>();
+        int originalEmptySlots = inventory.GetEmptySlots();
+        int remainingEmptySlots = originalEmptySlots;
+        int totalNewSlotsNeeded = 0;
+
         foreach (var entry in analysisContext.Entries)
         {
+            if (entry is { Amount: 0, InitialRecipeHadZero: true }) continue;
             ItemDrop.ItemData item = entry.Prefab.GetComponent<ItemDrop>().m_itemData;
-            neededSlots += Math.Ceiling(entry.Amount / (double)item.m_shared.m_maxStackSize);
-            if (inventory.FindFreeStackSpace(item.m_shared.m_name, item.m_worldLevel) < entry.Amount)
-            {
-                if (inventory.FindEmptySlot(inventory.TopFirst(item)).x == -1)
-                {
-                    haveEnoughSlots = false;
-                    break;
-                }
-                else
-                {
-                    emptySlots++;
-                }
-            }
-        }
+            var key = (item.m_shared.m_name, item.m_worldLevel);
+            int maxStack = item.m_shared.m_maxStackSize;
 
-        if (haveEnoughSlots) return;
-        string message = Localize("$azumatt_recycle_n_reclaim_not_enough_slots", neededSlots.ToString(), emptySlots.ToString());
-        analysisContext.RecyclingImpediments.Add(message);
+            int realFreeStack = inventory.FindFreeStackSpace(item.m_shared.m_name, item.m_worldLevel);
+            virtualStackUsed.TryGetValue(key, out int committed);
+            int effectiveStack = Math.Max(0, realFreeStack - committed);
+
+            int overflow = Math.Max(0, entry.Amount - effectiveStack);
+            if (overflow > 0)
+            {
+                int slotsNeeded = (int)Math.Ceiling(overflow / (double)maxStack);
+                totalNewSlotsNeeded += slotsNeeded;
+                remainingEmptySlots -= slotsNeeded;
+                virtualStackUsed[key] = committed + effectiveStack;
+            }
+            else
+            {
+                virtualStackUsed[key] = committed + entry.Amount;
+            }
+
+            if (remainingEmptySlots >= 0) continue;
+            string message = Localize("$azumatt_recycle_n_reclaim_not_enough_slots", totalNewSlotsNeeded.ToString(), originalEmptySlots.ToString());
+            analysisContext.RecyclingImpediments.Add(message);
+            return;
+        }
     }
 
 
     private static void AnalyzeMaterialYieldForItem(RecyclingAnalysisContext analysisContext)
     {
-        var recyclingRate = RecyclingRate.Value;
         var itemData = analysisContext.Item;
+        var prefabName = itemData.m_dropPrefab != null ? global::Utils.GetPrefabName(itemData.m_dropPrefab.name) : "";
+        var recyclingRate = GroupUtils.GetRecycleRateOverride(prefabName) ?? RecyclingRate.Value;
         var recipe = analysisContext.Recipe;
 
         var amountToCraftedRecipeAmountPercentage = itemData.m_stack / (double)recipe.m_amount;

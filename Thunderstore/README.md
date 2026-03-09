@@ -147,6 +147,36 @@ ReturnResources [Synced with Server]
   will be set to 0 or 1 respectively.
     * Default Value: 1
 
+BorderColorTrashedItem [Not Synced with Server]
+
+* Color of the border shown on inventory slots containing items that have been marked for trashing.
+    * Default Value: Red (1, 0, 0)
+
+DisplayTooltipHint [Not Synced with Server]
+
+* Whether to add additional info to the item tooltip of a Trashed or trash flagged item.
+    * Default Value: true
+
+ShowRecycleYieldInTooltip [Not Synced with Server]
+
+* If on, hovering an item will show what it would yield if recycled.
+    * Default Value: false
+
+TrashingKeybind [Not Synced with Server]
+
+* Key(s) that when pressed while holding the modifier key will trash all items currently marked for trashing.
+    * Default Value: Mouse2 (middle mouse button)
+
+TrashingModifierKeybind1 [Not Synced with Server]
+
+* While this key and right-click are held, hovering over items marks them for trashing. Releasing this key cancels trashing mode for all items.
+    * Default Value: X
+
+TrashedSlotTooltip [Not Synced with Server]
+
+* The tooltip text displayed when hovering over a slot that has been marked for trashing.
+    * Default Value: "Slot is Trashed and will be a part of the bulk delete"
+
 `3 - Reclaiming`
 
 RecyclingRate [Synced with Server]
@@ -188,6 +218,16 @@ AllowRecyclingUnknownRecipes [Synced with Server]
 * If enabled, it will allow you to recycle items that you do not know the recipe for yet.
   Disabled by default as this can be cheaty, but sometimes required due to people losing progress.
     * Default Value: Off
+
+UndoRecycleKeybind [Not Synced with Server]
+
+* Keybind to undo the last reclaim from the Reclaim tab. Only works within the grace period.
+    * Default Value: LeftControl + Z
+
+UndoRecycleGracePeriodSeconds [Synced with Server]
+
+* Number of seconds after a reclaim during which it can be undone. Set to 0 to disable undo entirely.
+    * Default Value: 20
 
 `4 - UI`
 
@@ -392,6 +432,13 @@ reclaiming:
     - Hammer # Exclude this specific item from being reclaimed
   includeOverride:
     - All # Allow all items to be reclaimed, overrides the exclude rules above for "reclaiming" section
+  # recycleRates lets you override the global RecyclingRate config for specific items or groups.
+  # Values must be between 0.0 and 1.0. Items not listed here use the global RecyclingRate config value.
+  # You can use predefined group names (e.g. "Swords", "Armor") or individual prefab names.
+  recycleRates:
+    SwordBronze: 1.0     # Always return 100% of materials for this specific item
+    Armor: 0.75          # Return 75% of materials for all armor pieces
+    # Metals: 0.25       # Example: return only 25% for all metals
 
 # Containers section determines the rules for specific containers. It follows the limitations of the "reclaiming" section to determine what is actually reclaimed.
 # This section is primarily used for managing the items included or excluded from the "Reclaim All" functionality of containers, allowing you to prevent certain items 

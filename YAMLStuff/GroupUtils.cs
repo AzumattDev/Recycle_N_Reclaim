@@ -1,14 +1,15 @@
 ﻿namespace Recycle_N_Reclaim.YAMLStuff;
 
 [HarmonyPatch(typeof(ObjectDB), nameof(ObjectDB.Awake))]
-[HarmonyPriority(Priority.Last)]
 static class PredefinedGroupGrab
 {
+    [HarmonyPriority(Priority.Last)]
     static void Postfix(ObjectDB __instance)
     {
         if (!ZNetScene.instance)
             return;
         GroupUtils.CreatePredefinedGroups(__instance);
+        Reclaimer.BuildRecipeCache(__instance);
     }
 }
 
@@ -259,6 +260,23 @@ public class GroupUtils
 #endif
     }
 
+
+    public static float? GetRecycleRateOverride(string prefabName)
+    {
+        var rates = yamlData?.Reclaiming?.RecycleRates;
+        if (rates == null || rates.Count == 0) return null;
+
+        if (rates.TryGetValue(prefabName, out float rate))
+            return Mathf.Clamp01(rate);
+
+        foreach (var kvp in rates)
+        {
+            if (yamlData.Groups.TryGetValue(kvp.Key, out var group) && group.Contains(prefabName))
+                return Mathf.Clamp01(kvp.Value);
+        }
+
+        return null;
+    }
 
     public static bool IsPrefabExcludedInReclaiming(string prefabName)
     {
