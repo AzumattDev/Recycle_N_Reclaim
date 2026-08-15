@@ -1,4 +1,5 @@
-﻿using Jewelcrafting;
+﻿using EpicLootAPI;
+using Jewelcrafting;
 
 namespace Recycle_N_Reclaim.GamePatches;
 
@@ -43,21 +44,17 @@ public static class Utils
 
                 List<Piece.Requirement>? reqs = recipe.m_resources.ToList();
 
-                bool isMagic = false;
-                bool cancel = false;
-                if (epicLootAssembly != null && returnEnchantedResources.Value.IsOn())
-                    isMagic = (bool)UpdateItemDragPatch.isMagicMethod?.Invoke(null, new[] { ___m_dragItem });
-
-                if (isMagic)
+                if (HasEpicLoot && returnEnchantedResources.Value.IsOn()
+                                && ___m_dragItem.IsMagicItem() && ___m_dragItem.TryGetRarity(out var rarity))
                 {
-                    int rarity = (int)UpdateItemDragPatch.getRarityMethod?.Invoke(null, new[] { ___m_dragItem });
-                    List<KeyValuePair<ItemDrop, int>> magicReqs = (List<KeyValuePair<ItemDrop, int>>)UpdateItemDragPatch.getEnchantCostsMethod?.Invoke(null, new object[] { ___m_dragItem, rarity });
-
-                    foreach (KeyValuePair<ItemDrop, int> kvp in magicReqs)
+                    foreach (var cost in ___m_dragItem.GetEnchantCosts(rarity))
                     {
-                        var recipe2 = ObjectDB.instance.GetRecipe(kvp.Key.m_itemData);
-                        bool isRecipeKnown = recipe2 != null && Player.m_localPlayer.IsRecipeKnown(kvp.Key.m_itemData.m_shared.m_name);
-                        bool isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(kvp.Key.m_itemData.m_shared.m_name);
+                        var costItem = ObjectDB.instance.GetItemPrefab(cost.Item)?.GetComponent<ItemDrop>();
+                        if (costItem == null) continue;
+
+                        var recipe2 = ObjectDB.instance.GetRecipe(costItem.m_itemData);
+                        bool isRecipeKnown = recipe2 != null && Player.m_localPlayer.IsRecipeKnown(costItem.m_itemData.m_shared.m_name);
+                        bool isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(costItem.m_itemData.m_shared.m_name);
 
                         if (returnUnknownResources.Value.IsOff() &&
                             (!isRecipeKnown || !isKnownMaterial))
@@ -68,8 +65,8 @@ public static class Utils
 
                         reqs.Add(new Piece.Requirement
                         {
-                            m_amount = recipe2 != null ? recipe2.m_amount : kvp.Value,
-                            m_resItem = kvp.Key
+                            m_amount = recipe2 != null ? recipe2.m_amount : cost.Amount,
+                            m_resItem = costItem
                         });
                     }
                 }
@@ -109,7 +106,7 @@ public static class Utils
                 }
 
 
-                if (!cancel && ___m_dragAmount / recipe.m_amount > 0)
+                if (___m_dragAmount / recipe.m_amount > 0)
                     for (int i = 0; i < ___m_dragAmount / recipe.m_amount; i++)
                         foreach (Piece.Requirement req in reqs)
                         {
