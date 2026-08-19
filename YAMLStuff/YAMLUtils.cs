@@ -25,6 +25,10 @@ public class YAMLUtils
         yamlData = deserializer.Deserialize<Root>(yamlInput);
         // log the yaml data
         Recycle_N_ReclaimLogger.LogDebug($"yamlData:\n{yamlInput}");
+        yamlData.Groups ??= new Dictionary<string, List<string>>();
+        yamlData.Containers ??= new Dictionary<string, excludeContainer>();
+        yamlData.Reclaiming ??= new Reclaiming();
+        yamlData.Inventory ??= new Inventory();
         // Iterate over each group in predefinedGroups
         foreach (KeyValuePair<string, HashSet<string>> group in predefinedGroups)
         {

@@ -18,7 +18,7 @@ namespace Recycle_N_Reclaim;
 public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
 {
     internal const string ModName = "Recycle_N_Reclaim";
-    internal const string ModVersion = "1.4.0";
+    internal const string ModVersion = "1.4.1";
     internal const string Author = "Azumatt";
     private const string ModGUID = Author + "." + ModName;
     private static string ConfigFileName = ModGUID + ".cfg";
@@ -58,7 +58,7 @@ public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
         _ = ConfigSyncVar.AddLockingConfigEntry(_serverConfigLocked);
 
         ApplyCraftedBy = config("1 - General", "Apply Crafted By", Toggle.On, "If on, the player will be the 'crafter' of each recycled item. If off, these values are empty");
-        
+
         /* Inventory Discard */
         var sectionName = "2 - Inventory Recycle";
         /* Discard Items in Inventory */
