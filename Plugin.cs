@@ -1,5 +1,4 @@
-﻿using BepInEx.Bootstrap;
-using BepInEx.Configuration;
+﻿using BepInEx.Configuration;
 using BepInEx.Logging;
 using JetBrains.Annotations;
 using Recycle_N_Reclaim.GamePatches.UI;
@@ -15,6 +14,7 @@ namespace Recycle_N_Reclaim;
 
 [BepInPlugin(ModGUID, ModName, ModVersion)]
 [BepInDependency("org.bepinex.plugins.jewelcrafting", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency("randyknapp.mods.epicloot", BepInDependency.DependencyFlags.SoftDependency)]
 public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
 {
     internal const string ModName = "Recycle_N_Reclaim";
@@ -23,9 +23,9 @@ public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
     private const string ModGUID = Author + "." + ModName;
     private static string ConfigFileName = ModGUID + ".cfg";
     private static string ConfigFileFullPath = Paths.ConfigPath + Path.DirectorySeparatorChar + ConfigFileName;
-    internal static Assembly? epicLootAssembly;
     internal static string ConnectionError = "";
     public static bool HasAuga;
+    public static bool HasEpicLoot;
     public static StationRecyclingTabHolder RecyclingTabButtonHolder { get; private set; }
     private ContainerRecyclingButtonHolder _containerRecyclingButton;
 
@@ -206,13 +206,13 @@ public class Recycle_N_ReclaimPlugin : BaseUnityPlugin
         InventoryGridUpdateGuiPatch.border = loadSprite("trashingborder.png");
         AutoDoc();
         HasAuga = Auga.API.IsLoaded();
+        HasEpicLoot = EpicLootAPI.EpicLoot.IsLoaded();
         _containerRecyclingButton = gameObject.AddComponent<ContainerRecyclingButtonHolder>();
         _containerRecyclingButton.OnRecycleAllTriggered += ContainerRecyclingTriggered;
         RecyclingTabButtonHolder = gameObject.AddComponent<StationRecyclingTabHolder>();
 
-        if (!Chainloader.PluginInfos.ContainsKey("randyknapp.mods.epicloot")) return;
-        epicLootAssembly = Chainloader.PluginInfos["randyknapp.mods.epicloot"].Instance.GetType().Assembly;
-        Recycle_N_ReclaimLogger.LogDebug("Epic Loot found, providing compatibility");
+        if (HasEpicLoot)
+            Recycle_N_ReclaimLogger.LogDebug($"Epic Loot {EpicLootAPI.EpicLoot.GetPluginVersion()} found, providing compatibility");
     }
 
     internal static Sprite loadSprite(string name)

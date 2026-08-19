@@ -1,10 +1,10 @@
-﻿using Recycle_N_Reclaim.Managers;
+﻿using EpicLootAPI;
+using Recycle_N_Reclaim.Managers;
 
 namespace Recycle_N_Reclaim.GamePatches.Recycling;
 
 public static class Reclaimer
 {
-    private static bool _loggedErrorsOnce = false;
     private static Dictionary<string, List<Recipe>> _recipeCache = new();
 
     internal static void BuildRecipeCache(ObjectDB instance)
@@ -321,95 +321,47 @@ public static class Reclaimer
         }
 
 
-        if (epicLootAssembly == null)
-        {
-            goto jewelcrafting;
-        }
+        if (returnEnchantedResourcesReclaiming.Value.IsOff()) return;
 
-        var isMagic = false;
-        var cancel = false;
+        if (HasEpicLoot && !CheckEpicLoot(analysisContext)) return;
 
-        if (UpdateItemDragPatch.isMagicMethod == null)
-        {
-            if (!_loggedErrorsOnce)
-                Recycle_N_ReclaimLogger.LogError($"EpicLoot Loaded, but missing IsMagic() Method.");
-
-            _loggedErrorsOnce = true;
-            goto jewelcrafting;
-        }
-
-        if (returnEnchantedResourcesReclaiming.Value.IsOn())
-            isMagic = (bool)UpdateItemDragPatch.isMagicMethod.Invoke(null, new object[] { itemData })!;
-
-        if (isMagic)
-        {
-            //Validate Existence of Method:
-            if (UpdateItemDragPatch.getRarityMethod == null)
-            {
-                if (!_loggedErrorsOnce)
-                    Recycle_N_ReclaimLogger.LogError($"EpicLoot Loaded, but missing GetRarity() Method.");
-                _loggedErrorsOnce = true;
-
-                goto jewelcrafting;
-            }
-
-            var rarity = (int)UpdateItemDragPatch.getRarityMethod.Invoke(null, new object[] { itemData })!;
-
-            //Validate Existence of Method:
-            //if (UpdateItemDragPatch.getEnchantCostsMethod == null)
-            //{
-            //    if (!_loggedErrorsOnce)
-            //        Recycle_N_ReclaimPlugin.Recycle_N_ReclaimLogger.LogError($"EpicLoot Loaded, but missing GetEnchantCosts() Method.");
-
-            //    _loggedErrorsOnce = true;
-            //    goto jewelcrafting;
-            //}
-
-            List<KeyValuePair<ItemDrop, int>>? magicReqs =
-                (List<KeyValuePair<ItemDrop, int>>)UpdateItemDragPatch.getEnchantCostsMethod?.Invoke(null, new object[] { itemData, rarity })!;
-
-            foreach (KeyValuePair<ItemDrop, int> kvp in magicReqs)
-            {
-                var recipe2 = ObjectDB.instance.GetRecipe(kvp.Key.m_itemData);
-                var isRecipeKnown = Player.m_localPlayer.IsRecipeKnown(kvp.Key.m_itemData.m_shared.m_name) || AllowRecyclingUnknownRecipes.Value.IsOn();
-                var isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(kvp.Key.m_itemData.m_shared.m_name) || AllowRecyclingUnknownRecipes.Value.IsOn();
-
-                bool canRecycle = isKnownMaterial &&
-                                  (recipe2 == null || isRecipeKnown || AllowRecyclingUnknownRecipes.Value.IsOn());
-
-                if (!canRecycle)
-                {
-                    var localizedItemName = Localize(kvp.Key.m_itemData.m_shared.m_name);
-                    var localizedString = Localize("$azumatt_recycle_n_reclaim_recipe_not_known", localizedItemName ?? kvp.Key.m_itemData.m_shared.m_name);
-                    analysisContext.RecyclingImpediments.Add(localizedString);
-                    return;
-                }
-
-                if (!GroupUtils.IsPrefabExcludedInReclaiming(global::Utils.GetPrefabName(kvp.Key.gameObject)))
-                {
-                    if (recipe2 != null)
-                    {
-                        var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(kvp.Key.gameObject, kvp.Key.m_itemData, recipe2.m_amount,
-                            kvp.Key.m_itemData.m_quality, kvp.Key.m_itemData.m_variant, false);
-                        analysisContext.Entries.Add(yieldEntry);
-                    }
-                    else if (kvp.Key) // Magic items that do not have a recipe
-                    {
-                        var yieldEntry = new RecyclingAnalysisContext.ReclaimingYieldEntry(kvp.Key.gameObject, kvp.Key.m_itemData, kvp.Key.m_itemData.m_stack,
-                            kvp.Key.m_itemData.m_quality, kvp.Key.m_itemData.m_variant, false);
-                        analysisContext.Entries.Add(yieldEntry);
-                    }
-                }
-            }
-        }
-
-        _loggedErrorsOnce = false; //if we get here, no errors, reset error count so that errors will print again.
-
-        jewelcrafting:
-        if (Jewelcrafting.API.IsLoaded() && returnEnchantedResourcesReclaiming.Value.IsOn())
+        if (Jewelcrafting.API.IsLoaded())
         {
             CheckJewelCrafting(analysisContext);
         }
+    }
+
+    /// <returns>false when an impediment was recorded and analysis should stop</returns>
+    private static bool CheckEpicLoot(RecyclingAnalysisContext analysisContext)
+    {
+        var itemData = analysisContext.Item;
+        if (!itemData.IsMagicItem() || !itemData.TryGetRarity(out var rarity)) return true;
+
+        foreach (var cost in itemData.GetEnchantCosts(rarity))
+        {
+            var costPrefab = ObjectDB.instance.GetItemPrefab(cost.Item);
+            var costItemData = costPrefab == null ? null : costPrefab.GetComponent<ItemDrop>()?.m_itemData;
+            if (costItemData == null) continue;
+
+            var recipe = ObjectDB.instance.GetRecipe(costItemData);
+            var isRecipeKnown = Player.m_localPlayer.IsRecipeKnown(costItemData.m_shared.m_name) || AllowRecyclingUnknownRecipes.Value.IsOn();
+            var isKnownMaterial = Player.m_localPlayer.m_knownMaterial.Contains(costItemData.m_shared.m_name) || AllowRecyclingUnknownRecipes.Value.IsOn();
+
+            if (!isKnownMaterial || (recipe != null && !isRecipeKnown))
+            {
+                var localizedItemName = Localize(costItemData.m_shared.m_name);
+                analysisContext.RecyclingImpediments.Add(Localize("$azumatt_recycle_n_reclaim_recipe_not_known", localizedItemName ?? costItemData.m_shared.m_name));
+                return false;
+            }
+
+            if (GroupUtils.IsPrefabExcludedInReclaiming(global::Utils.GetPrefabName(costPrefab))) continue;
+
+            // Magic materials commonly have no recipe, fall back to the stack the prefab carries
+            analysisContext.Entries.Add(new RecyclingAnalysisContext.ReclaimingYieldEntry(costPrefab, costItemData,
+                recipe != null ? recipe.m_amount : costItemData.m_stack, costItemData.m_quality, costItemData.m_variant, false));
+        }
+
+        return true;
     }
 
     private static void CheckJewelCrafting(RecyclingAnalysisContext recyclingAnalysisContext)

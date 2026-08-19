@@ -1,4 +1,5 @@
 ﻿using Auga;
+using EpicLootAPI;
 
 namespace Recycle_N_Reclaim.GamePatches.UI;
 
@@ -50,7 +51,7 @@ public class StationRecyclingTabHolder : MonoBehaviour
                 var pngFile = Utils.LoadTextureFromResources("RecyclingPanel.png");
 
                 var buttonSprite = Sprite.Create(pngFile, new Rect(0, 0, pngFile.width, pngFile.height), new Vector2(0, 0), 100.0f);
-                if (epicLootAssembly != null)
+                if (HasEpicLoot)
                     _augaTabData = API.Workbench_AddWorkbenchTab("Reclaim", buttonSprite, ModName.Replace("_", "-"), (index) => OnRecycleClick());
                 else
                     _augaTabData = API.Workbench_AddVanillaWorkbenchTab("Reclaim", buttonSprite, ModName.Replace("_", "-"), (index) => OnRecycleClick());
@@ -173,12 +174,15 @@ public class StationRecyclingTabHolder : MonoBehaviour
         var component1 = element.transform.Find("icon").GetComponent<Image>();
         component1.sprite = context.Item.GetIcon();
         component1.color = context.RecyclingImpediments.Count == 0 ? Color.white : new Color(1f, 0.0f, 1f, 0.0f);
+        if (HasEpicLoot && context.RecyclingImpediments.Count == 0)
+            EpicLootAPI.EpicLoot.ApplyMagicItemBackgroundToIcon(component1.gameObject, context.Item);
         var component2 = element.transform.Find("name").GetComponent<TMP_Text>();
-        var str = Localize(context.Item.m_shared.m_name);
+        var blocked = context.RecyclingImpediments.Count > 0;
+        var str = Localize(ItemDisplayName(context.Item, blocked));
         if (context.Item.m_stack > 1 && context.Item.m_shared.m_maxStackSize > 1)
             str = $"{str} x{context.Item.m_stack}";
         component2.text = str;
-        component2.color = context.RecyclingImpediments.Count == 0 ? Color.white : new Color(0.66f, 0.66f, 0.66f, 1f);
+        component2.color = blocked ? new Color(0.66f, 0.66f, 0.66f, 1f) : Color.white;
         var component3 = element.transform.Find("Durability").GetComponent<GuiBar>();
         if (context.Item.m_shared.m_useDurability && context.Item.m_durability < (double)context.Item.GetMaxDurability())
         {
@@ -199,6 +203,14 @@ public class StationRecyclingTabHolder : MonoBehaviour
             ? Player.m_localPlayer.HaveRequirements(context.Recipe, false, 1) | globalKey
             : context.Item.m_quality < context.Item.m_shared.m_maxQuality && Player.m_localPlayer.HaveRequirements(context.Recipe, false, context.Item.m_quality + 1) | globalKey;
         m_recipeList.Add(new InventoryGui.RecipeDataPair(context.Recipe, context.Item, element, canCraft));
+    }
+
+    /* Epic Loot's decorated name carries a color tag that overrides the text component's own color, so a
+       blocked row has to be dimmed through the override rather than by tinting the component. */
+    private static string ItemDisplayName(ItemDrop.ItemData item, bool blocked)
+    {
+        if (!HasEpicLoot) return item.m_shared.m_name;
+        return EpicLootAPI.EpicLoot.GetDecoratedName(item, blocked ? "#A8A8A8FF" : null);
     }
 
 
@@ -308,7 +320,9 @@ public class StationRecyclingTabHolder : MonoBehaviour
         igui.m_recipeDecription.enabled = true;
 
         igui.m_recipeIcon.sprite = igui.get_m_selectedRecipe().Recipe.m_item.m_itemData.m_shared.m_icons[itemData?.m_variant ?? igui.get_m_selectedVariant()];
-        string str = Localize(igui.get_m_selectedRecipe().Recipe.m_item.m_itemData.m_shared.m_name);
+        if (HasEpicLoot)
+            EpicLootAPI.EpicLoot.ApplyMagicItemBackgroundToIcon(igui.m_recipeIcon.gameObject, analysisContext.Item);
+        string str = Localize(ItemDisplayName(analysisContext.Item, blocked: false));
         if (analysisContext.Item.m_stack > 1)
             str = str + " x" + analysisContext.Item.m_stack;
         igui.m_recipeName.text = str;
@@ -323,7 +337,8 @@ public class StationRecyclingTabHolder : MonoBehaviour
         if (itemData != null)
         {
             SetActive(igui.m_itemCraftType.gameObject, true);
-            igui.m_itemCraftType.text = Localize("$azumatt_recycle_n_reclaim_reclaim_item_level", Localize(itemData.m_shared.m_name), itemData.m_quality.ToString());
+            var craftTypeName = HasEpicLoot ? EpicLootAPI.EpicLoot.GetDisplayName(itemData) : itemData.m_shared.m_name;
+            igui.m_itemCraftType.text = Localize("$azumatt_recycle_n_reclaim_reclaim_item_level", Localize(craftTypeName), itemData.m_quality.ToString());
         }
         else
             SetActive(igui.m_itemCraftType.gameObject, false);
@@ -340,13 +355,13 @@ public class StationRecyclingTabHolder : MonoBehaviour
 
         SetActive(igui.m_variantButton.gameObject, igui.get_m_selectedRecipe().Recipe.m_item.m_itemData.m_shared.m_variants > 1 && igui.get_m_selectedRecipe().ItemData == null);
 
-        if (epicLootAssembly == null)
+        if (HasEpicLoot)
         {
-            SetupRequirementList(analysisContext);
+            SetupRequirementListEpicLoot(analysisContext);
         }
         else
         {
-            SetupRequirementListEpicLoot(analysisContext);
+            SetupRequirementList(analysisContext);
         }
 
         SetActive(igui.m_minStationLevelIcon.gameObject, false);
@@ -358,6 +373,8 @@ public class StationRecyclingTabHolder : MonoBehaviour
     private void ClearRecipeUI(InventoryGui igui)
     {
         igui.m_recipeIcon.enabled = false;
+        if (HasEpicLoot)
+            EpicLootAPI.EpicLoot.ApplyMagicItemBackgroundToIcon(igui.m_recipeIcon.gameObject, null);
         igui.m_recipeName.enabled = false;
         igui.m_recipeDecription.enabled = false;
 
